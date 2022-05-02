@@ -30,6 +30,8 @@ node_st *dynamicSwitchToAstSource(node_st *root)
 
     OUT("#include \"ccngen/ast.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
+    OUT("#include \"palm/watchpoint.h\"\n");
+    OUT("#include \"palm/watchpointalloc.h\"\n");
 
     return root;
 }

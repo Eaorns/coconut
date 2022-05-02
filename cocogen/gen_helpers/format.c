@@ -88,3 +88,46 @@ char *FMTattributeTypeToString(enum attribute_type type)
     return NULL;
 }
 
+char *FMTattributeTypeName(enum attribute_type type)
+{
+    switch (type) {
+    case AT_user:
+        return "void";
+    case AT_link:
+        return "user";
+    case AT_link_or_enum:
+        return "link_or_enum";
+    case AT_int:
+        return "int";
+    case AT_string:
+        return "string";
+    case AT_bool:
+        return "bool";
+    case AT_int8:
+        return "int8";
+    case AT_int16:
+        return "int16";
+    case AT_int32:
+        return "int32";
+    case AT_int64:
+        return "int64";
+    case AT_float:
+        return "float";
+    case AT_double:
+        return "double";
+    case AT_uint:
+        return "uint";
+    case AT_uint8:
+        return "uint8";
+    case AT_uint16:
+        return "uint16";
+    case AT_uint32:
+        return "uint32";
+    case AT_uint64:
+        return "uint64";
+    default:
+        break;
+    }
+    assert(false);
+    return NULL;
+}

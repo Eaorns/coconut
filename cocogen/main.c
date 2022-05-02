@@ -5,6 +5,8 @@
 #include "globals.h"
 #include "palm/filesystem.h"
 #include "palm/str.h"
+#include "palm/watchpoint.h"
+#include "palm/watchpointalloc.h"
 #include <ccn/ccn.h>
 #include "palm/dbug.h"
 #include <stddef.h>
@@ -61,9 +63,15 @@ int main(int argc, char *argv[])
     FSensureDirExists(globals.gen_hdr_dir, 0755);
     FSensureDirExists(globals.gen_user_dir, 0755);
 
+    watchpoint_init();
+    wpalloc_init();
+
     printf("--------------- Generating ---------------\n");
     CCNrun(NULL);
     printf("---------------    Done    ---------------\n");
+
+    watchpoint_fini();
+    wpalloc_fini();
 
     return 0;
 }

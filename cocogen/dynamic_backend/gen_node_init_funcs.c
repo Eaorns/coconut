@@ -50,7 +50,7 @@ node_st *DGIFchild(node_st *node)
             OUT(", ");
         }
         arg_num++;
-        OUT("CHILD %s *%s", basic_node_type, ID_LWR(CHILD_NAME(node)));
+        OUT("%s *%s", basic_node_type, ID_LWR(CHILD_NAME(node)));
     }
     TRAVchildren(node);
     return node;
@@ -65,11 +65,11 @@ node_st *DGIFattribute(node_st *node)
         }
         arg_num++;
         if (ATTRIBUTE_TYPE(node) == AT_link) {
-            OUT("ATTR %s *%s", basic_node_type, DGHattributeField(node));
+            OUT("%s *%s", basic_node_type, DGHattributeField(node));
         } else if (ATTRIBUTE_TYPE(node) == AT_link_or_enum) {
-            OUT("ATTR enum %s %s", ID_ORIG(ATTRIBUTE_TYPE_REFERENCE(node)), DGHattributeField(node));
+            OUT("enum %s %s", ID_ORIG(ATTRIBUTE_TYPE_REFERENCE(node)), DGHattributeField(node));
         } else {
-            OUT("ATTR %s %s", FMTattributeTypeToString(ATTRIBUTE_TYPE(node)), DGHattributeField(node));
+            OUT("%s %s", FMTattributeTypeToString(ATTRIBUTE_TYPE(node)), DGHattributeField(node));
         }
     }
     TRAVchildren(node);

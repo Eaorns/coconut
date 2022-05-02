@@ -34,9 +34,9 @@ node_st *DGNCinode(node_st *node)
     OUT_START_FUNC_FIELD();
     {
         OUT_FIELD("%s *node = NewNode()", basic_node_type);
-        OUT_FIELD("node->data.N_%s = MEMmalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
+        OUT_FIELD("node->data.N_%s = wpalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
         OUT_FIELD("NODE_TYPE(node) = %s%s", "NT_", ID_UPR(INODE_NAME(node)));
-
+        OUT_FIELD("node->data.N_%s->hist = MEMalloc(sizeof(struct NODE_HIST_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
 
         TRAVopt(INODE_ICHILDREN(node));
         TRAVopt(INODE_IATTRIBUTES(node));
@@ -65,6 +65,8 @@ node_st *DGNCchild(node_st *node)
     } else {
         OUT_FIELD("%s_%s(node) = NULL", node_name_upr, ID_UPR(CHILD_NAME(node)));
     }
+    OUT_FIELD("watchpoint_add(&(%s_%s(node)), &handler, NULL)", node_name_upr, ID_UPR(CHILD_NAME(node)));
+
     TRAVchildren(node);
     return node;
 }
@@ -77,7 +79,8 @@ node_st *DGNCattribute(node_st *node)
     } else {
         OUT_FIELD("%s_%s(node) = %s", node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)), FMTattributeDefaultVal(ATTRIBUTE_TYPE(node)));
     }
+    OUT_FIELD("watchpoint_add(&(%s_%s(node)), &handler, NULL)", node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)));
+
     TRAVchildren(node);
     return node;
 }
-

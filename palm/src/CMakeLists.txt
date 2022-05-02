@@ -6,4 +6,6 @@ target_sources(${PROJECT_NAME}
         str.c
         hash_table.c
         filesystem.c
+	watchpoint.c
+	watchpointalloc.c
 )

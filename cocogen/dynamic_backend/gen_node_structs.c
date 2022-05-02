@@ -11,10 +11,49 @@
 static char *basic_node_type = "node_st";
 static int child_num = 0;
 static node_st *ste = NULL;
+static bool gen_hist_struct = false;
+
+// TODO move this to a traversal?
+void hist_item_structs()
+{
+    GeneratorContext *ctx = globals.gen_ctx;
+
+    OUT_STRUCT("hist_item_user");
+    {
+        OUT_FIELD("void *val");
+        OUT_FIELD("struct hist_item_user *next");
+    }
+    OUT_STRUCT_END();
+
+    OUT_STRUCT("hist_item_link");
+    {
+        OUT_FIELD("%s *val", basic_node_type);
+        OUT_FIELD("struct hist_item_link *next");
+    }
+    OUT_STRUCT_END();
+
+    OUT_STRUCT("hist_item_lik_or_enum");
+    {
+        OUT_FIELD("int val");
+        OUT_FIELD("struct hist_item_link_or_enum *next");
+    }
+    OUT_STRUCT_END();
+
+    // TODO need a better way to loop through enum
+    for (int i = 4; i <= AT_uint64; i++) {
+        OUT_STRUCT("hist_item_%s", FMTattributeTypeName(i));
+        {
+            OUT_FIELD("%s val", FMTattributeTypeToString(i));
+            OUT_FIELD("struct hist_item_%s *next", FMTattributeTypeName(i));
+        }
+        OUT_STRUCT_END();
+    }
+}
 
 node_st *DGNSast(node_st *node)
 {
     ste = AST_STABLE(node);
+    hist_item_structs();
     TRAVchildren(node);
     return node;
 }
@@ -39,7 +78,17 @@ node_st *DGNSinode(node_st *node)
 
         TRAVopt(INODE_IATTRIBUTES(node));
     }
+    OUT_FIELD("\n    struct NODE_HIST_%s *hist", name_upr);
     OUT_STRUCT_END();
+
+    gen_hist_struct = true;
+    OUT_STRUCT("NODE_HIST_%s", name_upr);
+    {
+        TRAVopt(INODE_ICHILDREN(node));
+        TRAVopt(INODE_IATTRIBUTES(node));
+    }
+    OUT_STRUCT_END();
+    gen_hist_struct = false;
 
     TRAVopt(INODE_NEXT(node));
     return node;
@@ -48,8 +97,13 @@ node_st *DGNSinode(node_st *node)
 node_st *DGNSchild(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
-    child_num++;
-    OUT_FIELD("%s *%s", basic_node_type, ID_LWR(CHILD_NAME(node)));
+    if (!gen_hist_struct) {
+        child_num++;
+        OUT_FIELD("%s *%s", basic_node_type, ID_LWR(CHILD_NAME(node)));
+    } else {
+        OUT_FIELD("struct hist_item_link *%s", ID_LWR(CHILD_NAME(node)));
+    }
+
     TRAVchildren(node);
     return node;
 }
@@ -58,15 +112,25 @@ node_st *DGNSattribute(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
     if (ATTRIBUTE_TYPE(node) == AT_link) {
-        OUT_FIELD("%s *%s", basic_node_type, ID_LWR(ATTRIBUTE_NAME(node)));
+        if (!gen_hist_struct)
+            OUT_FIELD("%s *%s", basic_node_type, ID_LWR(ATTRIBUTE_NAME(node)));
+        else
+            OUT_FIELD("struct hist_item_link *%s", ID_LWR(ATTRIBUTE_NAME(node)));
     } else if (ATTRIBUTE_TYPE(node) == AT_link_or_enum) {
-        node_st *ref = STlookup(ste, ATTRIBUTE_TYPE_REFERENCE(node));
-        // Should be handled by check_existence.
-        assert(ref);
-        assert(NODE_TYPE(ref) == NT_IENUM);
-        OUT_FIELD("enum %s %s", ID_ORIG(IENUM_NAME(ref)), ID_LWR(ATTRIBUTE_NAME(node)));
+        if (!gen_hist_struct) {
+            node_st *ref = STlookup(ste, ATTRIBUTE_TYPE_REFERENCE(node));
+            // Should be handled by check_existence.
+            assert(ref);
+            assert(NODE_TYPE(ref) == NT_IENUM);
+            OUT_FIELD("enum %s %s", ID_ORIG(IENUM_NAME(ref)), ID_LWR(ATTRIBUTE_NAME(node)));
+        } else {
+            OUT_FIELD("struct hist_item_link_or_enum *%s", ID_LWR(ATTRIBUTE_NAME(node)));
+        }
     } else {
-        OUT_FIELD("%s %s", FMTattributeTypeToString(ATTRIBUTE_TYPE(node)), ID_LWR(ATTRIBUTE_NAME(node)));
+        if (!gen_hist_struct)
+            OUT_FIELD("%s %s", FMTattributeTypeToString(ATTRIBUTE_TYPE(node)), ID_LWR(ATTRIBUTE_NAME(node)));
+        else
+            OUT_FIELD("struct hist_item_%s *%s", FMTattributeTypeName(ATTRIBUTE_TYPE(node)), ID_LWR(ATTRIBUTE_NAME(node)));
     }
     TRAVchildren(node);
     return node;

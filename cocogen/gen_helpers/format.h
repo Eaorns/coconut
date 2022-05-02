@@ -6,3 +6,4 @@
 void FMTprintIndentLevel(FILE *fp, int indent);
 char *FMTattributeDefaultVal(enum attribute_type);
 char *FMTattributeTypeToString(enum attribute_type);
+char *FMTattributeTypeName(enum attribute_type);
