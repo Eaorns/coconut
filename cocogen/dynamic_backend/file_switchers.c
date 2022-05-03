@@ -28,6 +28,7 @@ node_st *dynamicSwitchToAstSource(node_st *root)
     GeneratorContext *ctx = globals.gen_ctx;
     GNopenSourceFile(ctx, "ast.c");
 
+    OUT("#include <stddef.h>\n");
     OUT("#include \"ccngen/ast.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
     OUT("#include \"palm/watchpoint.h\"\n");

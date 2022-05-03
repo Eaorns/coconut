@@ -10,6 +10,7 @@
 
 static char *basic_node_type = "node_st";
 static int child_num = 0;
+static int val_num = 0;
 static node_st *ste = NULL;
 static bool gen_hist_struct = false;
 
@@ -84,8 +85,14 @@ node_st *DGNSinode(node_st *node)
     gen_hist_struct = true;
     OUT_STRUCT("NODE_HIST_%s", name_upr);
     {
+        OUT_UNION("HIST_%s", name_upr);
+        OUT_STRUCT("HIST_ITEMS_%s", name_upr);
+        val_num = 0;
         TRAVopt(INODE_ICHILDREN(node));
         TRAVopt(INODE_IATTRIBUTES(node));
+        OUT_TYPEDEF_STRUCT_END("hist_items");
+        OUT_FIELD("void *hist_list[%i]", val_num);
+        OUT_TYPEDEF_STRUCT_END("hist");
     }
     OUT_STRUCT_END();
     gen_hist_struct = false;
@@ -101,6 +108,7 @@ node_st *DGNSchild(node_st *node)
         child_num++;
         OUT_FIELD("%s *%s", basic_node_type, ID_LWR(CHILD_NAME(node)));
     } else {
+        val_num++;
         OUT_FIELD("struct hist_item_link *%s", ID_LWR(CHILD_NAME(node)));
     }
 
@@ -132,6 +140,7 @@ node_st *DGNSattribute(node_st *node)
         else
             OUT_FIELD("struct hist_item_%s *%s", FMTattributeTypeName(ATTRIBUTE_TYPE(node)), ID_LWR(ATTRIBUTE_NAME(node)));
     }
+    val_num++;
     TRAVchildren(node);
     return node;
 }
