@@ -22,6 +22,8 @@ void hist_item_structs()
     OUT_STRUCT("hist_item_user");
     {
         OUT_FIELD("void *val");
+        OUT_FIELD("void *rip");
+        OUT_FIELD("ccn_traversal_type trav");
         OUT_FIELD("struct hist_item_user *next");
     }
     OUT_STRUCT_END();
@@ -29,6 +31,7 @@ void hist_item_structs()
     OUT_STRUCT("hist_item_link");
     {
         OUT_FIELD("%s *val", basic_node_type);
+        OUT_FIELD("void *rip");
         OUT_FIELD("struct hist_item_link *next");
     }
     OUT_STRUCT_END();
@@ -36,6 +39,7 @@ void hist_item_structs()
     OUT_STRUCT("hist_item_lik_or_enum");
     {
         OUT_FIELD("int val");
+        OUT_FIELD("void *rip");
         OUT_FIELD("struct hist_item_link_or_enum *next");
     }
     OUT_STRUCT_END();
@@ -45,6 +49,7 @@ void hist_item_structs()
         OUT_STRUCT("hist_item_%s", FMTattributeTypeName(i));
         {
             OUT_FIELD("%s val", FMTattributeTypeToString(i));
+            OUT_FIELD("void *rip");
             OUT_FIELD("struct hist_item_%s *next", FMTattributeTypeName(i));
         }
         OUT_STRUCT_END();
