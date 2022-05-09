@@ -11,6 +11,8 @@
 #include "ccn/dynamic_core.h"
 #include "ccngen/action_handling.h"
 #include "palm/ctinfo.h"
+#include "palm/watchpoint.h"
+#include "palm/watchpointalloc.h"
 #include "ccn/phase_driver.h"
 
 
@@ -294,7 +296,11 @@ void CCNsetTreeCheck(bool enable)
 void CCNrun(struct ccn_node *node)
 {
     resetPhaseDriver();
+    watchpoint_init();
+    wpalloc_init();
     node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
+    watchpoint_fini();
+    wpalloc_fini();
     TRAVstart(node, TRAV_free);
 }
 

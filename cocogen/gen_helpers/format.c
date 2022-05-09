@@ -92,9 +92,9 @@ char *FMTattributeTypeName(enum attribute_type type)
 {
     switch (type) {
     case AT_user:
-        return "void";
-    case AT_link:
         return "user";
+    case AT_link:
+        return "link";
     case AT_link_or_enum:
         return "link_or_enum";
     case AT_int:

@@ -19,11 +19,19 @@ void hist_item_structs()
 {
     GeneratorContext *ctx = globals.gen_ctx;
 
+    OUT_ENUM("H_DATTYPES");
+    {
+        for (int i = 1; i <= AT_uint64; i++) {
+            OUT_ENUM_FIELD("HDT_%s", FMTattributeTypeName(i));
+        }
+    }
+    OUT_ENUM_END();
+
     OUT_STRUCT("hist_item_user");
     {
         OUT_FIELD("void *val");
         OUT_FIELD("void *rip");
-        OUT_FIELD("ccn_traversal_type trav");
+        OUT_FIELD("%s *prev_parent", basic_node_type);
         OUT_FIELD("struct hist_item_user *next");
     }
     OUT_STRUCT_END();
@@ -36,7 +44,7 @@ void hist_item_structs()
     }
     OUT_STRUCT_END();
 
-    OUT_STRUCT("hist_item_lik_or_enum");
+    OUT_STRUCT("hist_item_link_or_enum");
     {
         OUT_FIELD("int val");
         OUT_FIELD("void *rip");
@@ -98,6 +106,9 @@ node_st *DGNSinode(node_st *node)
         OUT_TYPEDEF_STRUCT_END("hist_items");
         OUT_FIELD("void *hist_list[%i]", val_num);
         OUT_TYPEDEF_STRUCT_END("hist");
+
+        OUT_FIELD("enum ccn_traversal_type trav");
+        OUT_FIELD("struct NODE_HIST_%s *next", name_upr);
     }
     OUT_STRUCT_END();
     gen_hist_struct = false;

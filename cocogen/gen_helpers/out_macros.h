@@ -25,6 +25,7 @@
 #define OUT_ENUM_FIELD(fmt, ...)  GNprint(ctx, GN_DEFAULT, fmt ",\n", ## __VA_ARGS__)
 #define OUT_BEGIN_SWITCH(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "switch (" fmt ") {\n", ## __VA_ARGS__)
 #define OUT_BEGIN_CASE(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "case " fmt ":\n", ## __VA_ARGS__)
+#define OUT_BEGIN_CASE_SEMI(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "case " fmt ":;\n", ## __VA_ARGS__)
 #define OUT_END_CASE() GNprint(ctx, GN_DECREASE_WS_AFTER, "break;\n");
 #define OUT_END_CASE_NO_BREAK() GNprint(ctx, GN_DECREASE_WS_AFTER, "");
 #define OUT_BEGIN_DEFAULT_CASE() GNprint(ctx, GN_INCREASE_WS_AFTER, "default:\n")

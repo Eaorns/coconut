@@ -36,7 +36,7 @@ extern int errno;
 #define TRAPFLAG_X86 0x0100
 #define TRAPFLAG TRAPFLAG_X86
 
-typedef void (*wp_handler)(void*, long, void*);
+typedef void (*wp_handler)(void*, long, void*, void*);
 
 /* Struct to keep track of which pages contain breakpoints,
  * Also stores how many there are in the page. */
@@ -251,7 +251,7 @@ void watchpoint_sigtrap(int signo, siginfo_t *info, void *vcontext)
 
     wp_addr *addr = wp_addr_get(curr_segv_addr);
     if (addr->handler != NULL)
-        (addr->handler)(curr_segv_addr, prev_val, addr->data);
+        (addr->handler)(curr_segv_addr, prev_val, vcontext, addr->data);
 
     curr_segv_addr = NULL;
     return;

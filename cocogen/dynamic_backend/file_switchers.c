@@ -28,7 +28,10 @@ node_st *dynamicSwitchToAstSource(node_st *root)
     GeneratorContext *ctx = globals.gen_ctx;
     GNopenSourceFile(ctx, "ast.c");
 
+    OUT("#define _GNU_SOURCE  // Required for REG_RIP\n");
     OUT("#include <stddef.h>\n");
+    OUT("#include <signal.h>\n");
+    OUT("#include <ucontext.h>\n");
     OUT("#include \"ccngen/ast.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
     OUT("#include \"palm/watchpoint.h\"\n");
