@@ -132,7 +132,7 @@ void *wpalloc(unsigned int size)
 
 void wpfree(void *ptr)
 {
-    wpa_alloc *prev, *entry = alloc_table[ALLOC_TABLE_BASE(ptr)];
+    wpa_alloc *prev = NULL, *entry = alloc_table[ALLOC_TABLE_BASE(ptr)];
 
     while (entry != NULL) {
         if (entry->addr == ptr) {

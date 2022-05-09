@@ -134,8 +134,8 @@ node_st *DGNCchild(node_st *node)
         } else {
             OUT_FIELD("%s_%s(node) = NULL", node_name_upr, ID_UPR(CHILD_NAME(node)));
         }
-        OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler_%s, &(%s_data[%i]))",
-                  node_name_upr, ID_UPR(CHILD_NAME(node)), node_name_lwr, node_name_upr, num_vals++);
+        // OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler_%s, &(%s_data[%i]))",
+        //           node_name_upr, ID_UPR(CHILD_NAME(node)), node_name_lwr, node_name_upr, num_vals++);
     }
 
     TRAVchildren(node);
@@ -179,8 +179,8 @@ node_st *DGNCattribute(node_st *node)
         } else {
             OUT_FIELD("%s_%s(node) = %s", node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)), FMTattributeDefaultVal(ATTRIBUTE_TYPE(node)));
         }
-        OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler_%s, &(%s_data[%i]))", 
-                  node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)), node_name_lwr, node_name_upr, num_vals++);
+        // OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler_%s, &(%s_data[%i]))", 
+        //           node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)), node_name_lwr, node_name_upr, num_vals++);
     }
 
     TRAVchildren(node);

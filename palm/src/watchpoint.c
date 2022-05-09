@@ -213,7 +213,7 @@ void watchpoint_sigsegv(int signo, siginfo_t *info, void *vcontext)
     WP_DEBUG("[watchpoint handler] SIGSEGV at %p\n", info->si_addr);
     // TODO also check if SIGSEGV type is as expected & possibly if page is in use
     //      (which may be more efficient than checking the address)
-    if (info->si_addr == NULL || curr_segv_addr != NULL || wp_page_get(info->si_addr) == NULL) {
+    if (info->si_addr == NULL || curr_segv_addr != NULL || wp_page_get(PAGE_ALIGN(info->si_addr)) == NULL) {
         WP_DEBUG("[watchpoint handler] Non-intentional SIGSEGV! Restoring default handler...\n");
 
         /* Restore default sighandler */
@@ -250,7 +250,7 @@ void watchpoint_sigtrap(int signo, siginfo_t *info, void *vcontext)
     mprotect(page->addr, PAGE_SIZE, PROT_READ);
 
     wp_addr *addr = wp_addr_get(curr_segv_addr);
-    if (addr->handler != NULL)
+    if (addr != NULL && addr->handler != NULL)
         (addr->handler)(curr_segv_addr, prev_val, vcontext, addr->data);
 
     curr_segv_addr = NULL;

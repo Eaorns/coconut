@@ -18,6 +18,8 @@ node_st *DGFTast(node_st *node)
     GNopenSourceFile(ctx, "ccn_free.c");
     OUT("#include \"ccngen/ast.h\"\n");
     OUT("#include \"ccn/dynamic_core.h\"\n");
+    OUT("#include \"palm/watchpoint.h\"\n");
+    OUT("#include \"palm/watchpointalloc.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
     ast = node;
     TRAVopt(AST_INODES(node));
@@ -60,7 +62,7 @@ node_st *DGFTinode(node_st *node)
     }
     TRAVopt(INODE_IATTRIBUTES(node));
     OUT_FIELD("MEMfree(NODE_FILENAME(arg_node))");
-    OUT_FIELD("MEMfree(arg_node->data.N_%s)", ID_LWR(INODE_NAME(node)));
+    OUT_FIELD("wpfree(arg_node->data.N_%s)", ID_LWR(INODE_NAME(node)));
     OUT_FIELD("MEMfree(arg_node)");
     OUT_FIELD("return NULL");
     OUT_END_FUNC();

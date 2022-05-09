@@ -31,6 +31,9 @@ node_st *dynamicSwitchToAstSource(node_st *root)
     OUT("#define _GNU_SOURCE  // Required for REG_RIP\n");
     OUT("#include <stddef.h>\n");
     OUT("#include <signal.h>\n");
+    OUT("#include <stdlib.h>\n");
+    OUT("#include <unistd.h>\n");
+    OUT("#include <sys/mman.h>\n");
     OUT("#include <ucontext.h>\n");
     OUT("#include \"ccngen/ast.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
