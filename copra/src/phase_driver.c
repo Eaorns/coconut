@@ -296,10 +296,10 @@ void CCNsetTreeCheck(bool enable)
 void CCNrun(struct ccn_node *node)
 {
     resetPhaseDriver();
-    watchpoint_init();
+    // watchpoint_init();
     wpalloc_init();
     node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
-    watchpoint_fini();
+    // watchpoint_fini();
     wpalloc_fini();
     TRAVstart(node, TRAV_free);
 }

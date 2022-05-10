@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-// #define DO_WPA_DEBUG
+#define DO_WPA_DEBUG
 #ifdef DO_WPA_DEBUG
 #define WPA_DEBUG printf
 #else
@@ -153,6 +153,7 @@ void wpfree(void *ptr)
             else
                 prev->next = entry->next;
 
+            WPA_DEBUG("[wpalloc] FREEing %p\n", ptr);
             free(entry);
 
             break;

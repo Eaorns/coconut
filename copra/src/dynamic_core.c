@@ -73,12 +73,15 @@ struct ccn_node *TRAVopt(struct ccn_node *arg_node) {
 struct ccn_node *TRAVnop(struct ccn_node *arg_node) { return arg_node; }
 
 /**
- * Helper function that traverses all children in a node. 
+ * Helper function that traverses all children in a node.
  * This function assigns the result of the traversals to it respective child.
  * The order is determined by the order in the specification file.
  */
 struct ccn_node *TRAVchildren(struct ccn_node *arg_node) {
+    printf("[dyncore] Node %p with children: %i\n", arg_node, NODE_NUMCHILDREN(arg_node));
+    printf("[dyncore] %p\n", NODE_CHILDREN(arg_node));
     for (int i = 0; i < NODE_NUMCHILDREN(arg_node); i++) {
+        printf("[dyncore] Child %i: %p\n", i, NODE_CHILDREN(arg_node)[i]);
         NODE_CHILDREN(arg_node)[i] = TRAVopt(NODE_CHILDREN(arg_node)[i]);
     }
     return arg_node;
