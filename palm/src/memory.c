@@ -44,7 +44,6 @@ void *MEMmalloc(size_t size)
 void *MEMfree(void *address)
 {
     if(address != NULL) {
-        printf("[memory] FREEing %p\n", address);
         free(address);
         address = NULL;
     }

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#define DO_WPA_DEBUG
+// #define DO_WPA_DEBUG
 #ifdef DO_WPA_DEBUG
 #define WPA_DEBUG printf
 #else
@@ -127,6 +127,7 @@ void *wpalloc(unsigned int size)
     if (candidate >= 0 && candidate_left < page->left)
         alloc_candidates[candidate] = page;
 
+    WPA_DEBUG("[wpalloc] ALLOCing %p\n", entry->addr);
     return entry->addr;
 }
 
