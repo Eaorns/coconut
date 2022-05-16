@@ -13,66 +13,7 @@
 #endif
 
 int ccndbg_repl_done = 0;
-command null_commands[] = {{(char*)NULL, (comm_func_t*)NULL, (char*)NULL, NULL}};
-
-
-/**
- *  Declare command functions
- */
-
-// int comm_tree(char*);
-// int comm_print(char*);
-// int comm_quit(char*);
-
-// argument args_tree_get[] = {{"first", NULL},
-//                             {"last", NULL},
-//                             {(char*)NULL, NULL}};
-//
-// argument args_tree[] = {{"get", args_tree_get},
-//                         {"set", NULL},
-//                         {(char*)NULL, NULL}};
-//
-// command ccndbg_repl_commands[] = {{"tree",  comm_tree,  "View tree", args_tree},
-//                       {"print", comm_print, "View tree", NULL},
-//                       {"quit",  comm_quit,  "View tree", NULL},
-//                       {(char*)NULL, (comm_func_t*)NULL, (char*)NULL, NULL}};
-
-
-/**
- *  Define command functions
- */
-
-// int parse_arg(argument[], char*);
-
-// int comm_tree(char *comm)
-// {
-//     char *token = strtok(comm, " ");
-//     switch (parse_arg(args_tree, token)) {
-//     case 0:
-//         printf("Tree get '%s'\n", strtok(NULL, ""));
-//         break;
-//     case 1:
-//         printf("Tree set '%s'\n", strtok(NULL, ""));
-//         break;
-//     default:
-//         printf("Unknown argument '%s' for command 'tree'\n", token);
-//         return -1;
-//     }
-//
-//     return 0;
-// }
-//
-// int comm_print(char *comm)
-// {
-//     printf("Print '%s'\n", comm);
-// }
-//
-// int comm_quit(char *comm)
-// {
-//     ccndbg_repl_done = 1;
-//     return 0;
-// }
-
+command null_commands[] = {{(char*)NULL, (char*)NULL, (comm_func_t*)NULL, (char*)NULL, NULL}};
 command *ccndbg_repl_commands;
 
 
@@ -104,7 +45,7 @@ command *find_command(char *comm)
         return (command*)NULL;
 
     for (int i = 0; ccndbg_repl_commands[i].command; i++) {
-        if (strcmp(comm, ccndbg_repl_commands[i].command) == 0)
+        if (strcmp(comm, ccndbg_repl_commands[i].command) == 0 || strcmp(comm, ccndbg_repl_commands[i].alt) == 0)
             return (&ccndbg_repl_commands[i]);
     }
 
@@ -113,6 +54,9 @@ command *find_command(char *comm)
 
 int parse_arg(argument args[], char *arg)
 {
+    if (arg == NULL)
+        return -1;
+
     for (int i = 0; args[i].arg; i++) {
         if (strcmp(arg, args[i].arg) == 0)
             return i;

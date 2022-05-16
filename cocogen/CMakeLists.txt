@@ -40,4 +40,5 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
 
 target_include_directories(cocogen PUBLIC "${CMAKE_CURRENT_LIST_DIR}/ccngen" "${CMAKE_CURRENT_LIST_DIR}" "${PROJECT_SOURCE_DIR}/copra")
 
+target_link_libraries(cocogen PUBLIC edit ncurses)
 target_link_libraries(cocogen PUBLIC coconut::palm)
