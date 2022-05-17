@@ -92,4 +92,3 @@ node_st *SGNSattribute(node_st *node)
     TRAVopt(ATTRIBUTE_NEXT(node));
     return node;
 }
-

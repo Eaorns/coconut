@@ -20,10 +20,12 @@ node_st *DGNMast(node_st *node)
 
 node_st *DGNMinode(node_st *node)
 {
+    GeneratorContext *ctx = globals.gen_ctx;
     curr_node_name = ID_LWR(INODE_NAME(node));
     curr_node_name_upr = ID_UPR(INODE_NAME(node));
     TRAVopt(INODE_ICHILDREN(node));
     TRAVopt(INODE_IATTRIBUTES(node));
+    OUT("#define NODE_HIST_%s(n) ((n)->data.N_%s->hist)\n", curr_node_name_upr, curr_node_name);
     curr_node_name_upr = NULL;
     curr_node_name = NULL;
     TRAVopt(INODE_NEXT(node));
@@ -46,4 +48,3 @@ node_st *DGNMattribute(node_st *node)
     TRAVchildren(node);
     return node;
 }
-

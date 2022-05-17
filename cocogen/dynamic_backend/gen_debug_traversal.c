@@ -19,6 +19,10 @@ node_st *DGDTast(node_st *node)
     OUT("#include \"ccngen/ast.h\"\n");
     OUT("#include \"ccn/dynamic_core.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
+    OUT("#include \"ccn/ccn_dbg.h\"\n");
+    OUT("\n");
+    OUT_FIELD("struct ccn_node *parent = NULL");
+    OUT("\n");
     ast = node;
     TRAVopt(AST_INODES(node));
     return node;
@@ -55,11 +59,16 @@ node_st *DGDTinode(node_st *node)
     GeneratorContext *ctx = globals.gen_ctx;
     curr_node = node;
     OUT_START_FUNC("struct ccn_node *DBG%s(struct ccn_node *arg_node)", ID_LWR(INODE_NAME(node)));
-    if (INODE_ICHILDREN(node)) {
-        OUT_FIELD("TRAVchildren(arg_node)");
+    {
+        OUT_FIELD("arg_node->parent = parent");
+        if (INODE_ICHILDREN(node)) {
+            OUT_FIELD("struct ccn_node *curr_parent = parent");
+            OUT_FIELD("parent = arg_node");
+            OUT_FIELD("TRAVchildren(arg_node)");
+            OUT_FIELD("parent = curr_parent");
+        }
+        OUT_FIELD("return arg_node");
     }
-    TRAVopt(INODE_IATTRIBUTES(node));
-    OUT_FIELD("return arg_node");
     OUT_END_FUNC();
     TRAVopt(INODE_NEXT(node));
     return node;

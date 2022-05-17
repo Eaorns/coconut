@@ -26,9 +26,12 @@ command commands[] = {{"tree",  "t", comm_tree,  "Interact with the tree", args_
                       {"help",  "h", comm_help,  "Display possible commands", NULL},
                       {(char*)NULL, NULL, (comm_func_t*)NULL, (char*)NULL, NULL}};
 
-void cocodbg_init()
+struct ccn_node *curr_node;
+void cocodbg_start(struct ccn_node *start_node)
 {
     ccndbg_repl_commands = commands;
+    curr_node = start_node;
+    cocodbg_repl();
 }
 
 

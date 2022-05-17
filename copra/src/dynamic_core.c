@@ -1,5 +1,6 @@
 #include "ccn/dynamic_core.h"
 #include "ccn/ccn_types.h"
+#include "ccn/ccn_dbg.h"
 #include <err.h>
 #include <stdio.h>
 
@@ -110,3 +111,13 @@ struct ccn_node *CCNcopy(struct ccn_node *arg_node) { return TRAVstart(arg_node,
  * Free a node, all its children, and allocated attributes.
  */
 struct ccn_node *CCNfree(struct ccn_node *arg_node) { return TRAVstart(arg_node, TRAV_free); }
+
+/**
+ * Start a debugging session.
+ */
+struct ccn_node *CCNdebug(struct ccn_node *arg_node)
+{
+    TRAVstart(arg_node, TRAV_dbg);
+    cocodbg_start(arg_node);
+    return arg_node;
+}

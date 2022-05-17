@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ccn/ccn_types.h"
+
 typedef int comm_func_t(char*);
 
 typedef struct argument {
@@ -16,13 +18,11 @@ typedef struct command {
     argument *args;
 } command;
 
-void cocodbg_init();
+void cocodbg_start(struct ccn_node *start_node);
 
 int cocodbg_repl();
 command *find_command(char *comm);
 int parse_arg(argument args[], char *arg);
 
-
 extern int ccndbg_repl_done;
 extern command *ccndbg_repl_commands;
-

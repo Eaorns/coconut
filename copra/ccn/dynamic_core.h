@@ -24,3 +24,4 @@ void TRAVdataNOP(ccn_trav_st *);
 ccn_trav_st *TRAVgetCurrent(void);
 struct ccn_node *CCNcopy(struct ccn_node *arg_node);
 struct ccn_node *CCNfree(struct ccn_node *arg_node);
+struct ccn_node *CCNdebug(struct ccn_node *arg_node);

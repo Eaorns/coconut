@@ -32,4 +32,3 @@
 #define OUT_END_SWITCH() GNprint(ctx, GN_DECREASE_WS_BEFORE, "}\n\n")
 #define OUT_ENUM(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "enum " fmt " {\n", ##__VA_ARGS__)
 #define OUT_ENUM_END(...)  GNprint(ctx, GN_DECREASE_WS_BEFORE, "};\n\n")
-
