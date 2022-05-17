@@ -15,6 +15,7 @@ static void do_enum(char *name, node_st *node, char *prefix)
         OUT_ENUM_FIELD("TRAV_free");
         OUT_ENUM_FIELD("TRAV_check");
         OUT_ENUM_FIELD("TRAV_cpy");
+        OUT_ENUM_FIELD("TRAV_dbg");
     }
     OUT_ENUM_FIELD("_%sSIZE", prefix);
     OUT_ENUM_END();
@@ -68,4 +69,3 @@ node_st *DGEchild(node_st *node)
     TRAVchildren(node);
     return node;
 }
-

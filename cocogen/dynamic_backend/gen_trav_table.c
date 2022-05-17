@@ -19,6 +19,7 @@ node_st *DGTTast(node_st *node)
     OUT("ccn_free_vtable, ");
     OUT("ccn_check_vtable, ");
     OUT("ccn_copy_vtable, ");
+    OUT("ccn_debug_vtable, ");
     OUT("};\n");
     return node;
 }

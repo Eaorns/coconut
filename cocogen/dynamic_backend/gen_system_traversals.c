@@ -19,7 +19,7 @@ static char *system_trav_table_template = "const ccn_trav_ft ccn_%s_vtable[_NT_S
  * Generates a vtable according to the given data.
  * The name of the vtable is `ccn_<trav_name>_vtable` and should correspond
  * to the one defined in vtable entries(see dynamic_backend/gen_trav_table.c).
- * 
+ *
  * The second parameter (trav_prefix) is the prefix or uid of the system traversal.
  * This will be used in the generation of the handler functions for the traversal.
  * It is a good idea to prefix this with `CCN_`.
@@ -40,6 +40,7 @@ node_st *DGSTast(node_st *node)
     GenSystemTraversalVtable("CPY", "copy");
     GenSystemTraversalVtable("CHK", "check");
     GenSystemTraversalVtable("DEL", "free");
+    GenSystemTraversalVtable("DBG", "debug");
     GenSystemTraversalVtable("ERR", "error");
 
     return node;
@@ -58,4 +59,3 @@ node_st *DGSTinode(node_st *node)
 
     return node;
 }
-
