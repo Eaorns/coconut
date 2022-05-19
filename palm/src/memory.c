@@ -38,13 +38,44 @@ void *MEMmalloc(size_t size)
 }
 
 /**
+ * Allocate memory. If memory can not be allocated this function
+ * calls the CTIabortOufOfMemory function and exists.
+ * @param size Amount to allocate.
+ * @return A pointer to an allocated structure.
+ */
+void *MEMcalloc(size_t size)
+{
+    void *ptr;
+
+    DBUG_ASSERT((size >= 0), "called with negative size!");
+
+    if (size > 0) {
+        /*
+        * Since some UNIX system (e.g. ALPHA) do return NULL for size 0 as well
+        * we do complain for ((NULL == tmp) && (size > 0)) only!!
+        */
+        ptr = calloc(size, 1);
+
+        if (ptr == NULL) {
+            CTIabortOutOfMemory(size);
+        }
+    }
+    else {
+        ptr = NULL;
+    }
+
+    return ptr;
+}
+
+/**
  * Free memory. Returns NULL, but allows to do assignment to freed structure.
  * @param address address to free.
  */
 void *MEMfree(void *address)
 {
     if(address != NULL) {
-        free(address);
+        // TODO free list
+        // free(address);
         address = NULL;
     }
 

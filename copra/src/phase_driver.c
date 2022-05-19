@@ -300,7 +300,7 @@ void CCNrun(struct ccn_node *node)
     watchpoint_init();
     wpalloc_init();
     node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
-    // cocodbg_start(node);
+    cocodbg_start(node);
     watchpoint_fini();
     TRAVstart(node, TRAV_free);
     wpalloc_fini();

@@ -94,15 +94,15 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    // curr_action = DGA_nodehist;
-    // OUT_START_FUNC("hist_item *DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx)");
-    // OUT_BEGIN_SWITCH("type");
-    // TRAVchildren(node);
-    // OUT_BEGIN_DEFAULT_CASE();
-    // OUT_FIELD("return NULL");
-    // OUT_END_CASE_NO_BREAK();
-    // OUT_END_SWITCH();
-    // OUT_END_FUNC();
+    curr_action = DGA_nodehist;
+    OUT_START_FUNC("hist_item *DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx)");
+    OUT_BEGIN_SWITCH("type");
+    TRAVchildren(node);
+    OUT_BEGIN_DEFAULT_CASE();
+    OUT_FIELD("return NULL");
+    OUT_END_CASE_NO_BREAK();
+    OUT_END_SWITCH();
+    OUT_END_FUNC();
 
     curr_action = DGA_node_numvals;
     OUT_START_FUNC("int DBGHelper_node_numvals(enum ccn_nodetype type)");
@@ -122,7 +122,7 @@ node_st *DGDFast(node_st *node)
     OUT_FIELD("void *DBGHelper_getptr(node_st *node, int idx)");
     OUT_FIELD("int DBGHelper_ischild(enum ccn_nodetype type, int idx)");
     OUT_FIELD("char *DBGHelper_nodename(enum ccn_nodetype type)");
-    // OUT_FIELD("hist_item *DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx)");
+    OUT_FIELD("hist_item *DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx)");
     OUT_FIELD("int DBGHelper_node_numvals(enum ccn_nodetype type)");
     return node;
 }
@@ -200,11 +200,11 @@ node_st *DGDFinode(node_st *node)
             OUT_END_CASE_NO_BREAK();
             break;
 
-        // case DGA_nodehist:
-        //     OUT_BEGIN_CASE("NT_%s", ID_UPR(INODE_NAME(node)));
-        //     OUT_FIELD("return NODE_HIST_%s(hist)->hist.hist_list[idx]", ID_UPR(INODE_NAME(node)));
-        //     OUT_END_CASE_NO_BREAK();
-        //     break;
+        case DGA_nodehist:
+            OUT_BEGIN_CASE("NT_%s", ID_UPR(INODE_NAME(node)));
+            OUT_FIELD("return HIST_%s(hist)->hist.hist_list[idx]", ID_UPR(INODE_NAME(node)));
+            OUT_END_CASE_NO_BREAK();
+            break;
 
         case DGA_node_numvals:
             counter = 0;

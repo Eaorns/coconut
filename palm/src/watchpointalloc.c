@@ -114,7 +114,6 @@ void *wpalloc(unsigned int size)
         free(page);
         return NULL;
     }
-        // fprintf(stderr, "mmap successful\n");
     page->offset = size;
     page->left = page->size - size;
     page->allocs = 1;

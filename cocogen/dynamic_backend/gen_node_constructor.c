@@ -19,12 +19,12 @@ node_st *DGNCast(node_st *node)
     dgif_print_semicolon = false;
 
     GeneratorContext *ctx = globals.gen_ctx;
-    OUT_START_FUNC("void wphandler(void *addr __attribute__((unused)), void *old_val, void *ucontext, void *userdata)");
+    OUT_START_FUNC("void wphandler(void *addr, void *old_val __attribute__((unused)), void *ucontext, void *userdata)");
     {
         OUT_FIELD("ucontext_t *context = (ucontext_t *)ucontext");
         OUT_FIELD("void *rip = (void *)context->uc_mcontext.gregs[REG_RIP]");
         OUT_FIELD("struct hist_item *s = (struct hist_item *)malloc(sizeof(struct hist_item))");
-        OUT_FIELD("s->val = (void *)old_val");
+        OUT_FIELD("s->val = (void*)(*(long*)addr)");
         OUT_FIELD("s->rip = rip");
         OUT_FIELD("s->next = *(void**)userdata");
         OUT_FIELD("*(void**)userdata = s");
@@ -50,7 +50,7 @@ node_st *DGNCinode(node_st *node)
         OUT_FIELD("%s *node = NewNode()", basic_node_type);
         OUT_FIELD("node->data.N_%s = wpalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
         OUT_FIELD("NODE_TYPE(node) = %s%s", "NT_", ID_UPR(INODE_NAME(node)));
-        OUT_FIELD("NODE_HIST(node)->data.NH_%s = MEMmalloc(sizeof(struct NODE_HIST_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
+        OUT_FIELD("NODE_HIST(node)->data.NH_%s = MEMcalloc(sizeof(struct NODE_HIST_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
 
         TRAVopt(INODE_ICHILDREN(node));
         TRAVopt(INODE_IATTRIBUTES(node));
@@ -74,13 +74,13 @@ node_st *DGNCchild(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
     num_children++;
+    OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler, &(HIST_%s(NODE_HIST(node))->hist.hist_items.%s))",
+              node_name_upr, ID_UPR(CHILD_NAME(node)), node_name_upr, ID_LWR(CHILD_NAME(node)));
     if (CHILD_IN_CONSTRUCTOR(node)) {
         OUT_FIELD("%s_%s(node) = %s", node_name_upr, ID_UPR(CHILD_NAME(node)), ID_LWR(CHILD_NAME(node)));
     } else {
         OUT_FIELD("%s_%s(node) = NULL", node_name_upr, ID_UPR(CHILD_NAME(node)));
     }
-    OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler, &(HIST_%s(NODE_HIST(node))->hist.hist_items.%s))",
-              node_name_upr, ID_UPR(CHILD_NAME(node)), node_name_upr, ID_LWR(CHILD_NAME(node)));
     TRAVchildren(node);
     return node;
 }
@@ -88,13 +88,13 @@ node_st *DGNCchild(node_st *node)
 node_st *DGNCattribute(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
+    OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler, &(HIST_%s(NODE_HIST(node))->hist.hist_items.%s))",
+              node_name_upr, ID_UPR(CHILD_NAME(node)), node_name_upr, ID_LWR(ATTRIBUTE_NAME(node)));
     if (ATTRIBUTE_IN_CONSTRUCTOR(node)) {
         OUT_FIELD("%s_%s(node) = %s", node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)), DGHattributeField(node));
     } else {
         OUT_FIELD("%s_%s(node) = %s", node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)), FMTattributeDefaultVal(ATTRIBUTE_TYPE(node)));
     }
-    OUT_FIELD("watchpoint_add(&(%s_%s(node)), &wphandler, &(HIST_%s(NODE_HIST(node))->hist.hist_items.%s))",
-              node_name_upr, ID_UPR(CHILD_NAME(node)), node_name_upr, ID_LWR(ATTRIBUTE_NAME(node)));
     TRAVchildren(node);
     return node;
 }
