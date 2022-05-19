@@ -29,6 +29,7 @@ node_st *dynamicSwitchToAstSource(node_st *root)
     GNopenSourceFile(ctx, "ast.c");
 
     OUT("#define _GNU_SOURCE  // Required for REG_RIP\n");
+    OUT("#include <stdio.h>\n");
     OUT("#include <stddef.h>\n");
     OUT("#include <signal.h>\n");
     OUT("#include <stdlib.h>\n");

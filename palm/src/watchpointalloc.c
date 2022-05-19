@@ -98,16 +98,23 @@ void *wpalloc(unsigned int size)
             page->offset += size;
             page->left -= size;
             page->allocs++;
-
+            WPA_DEBUG("[wpalloc] ALLOCing %u e %p\n", size, entry->addr);
             return entry->addr;
         }
     }
 
     /* Not enough space found in candidate pages, create new */
+    WPA_DEBUG("[wpalloc] Creating new page...\n");
     page = malloc(sizeof(wpa_page));
     page->size = (PAGE_ALLOC_SIZE > size) ? PAGE_ALLOC_SIZE :
                                             ((size / PAGE_ALLOC_SIZE) + 1) * PAGE_ALLOC_SIZE;
     page->base = mmap(NULL, page->size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+    if (page->base == MAP_FAILED) {
+        WPA_DEBUG("[wpalloc] mmap failed!\n");
+        free(page);
+        return NULL;
+    }
+        // fprintf(stderr, "mmap successful\n");
     page->offset = size;
     page->left = page->size - size;
     page->allocs = 1;
@@ -120,20 +127,27 @@ void *wpalloc(unsigned int size)
     /* Add new page to list of candidates if its remaining
      * space is more than offered by one of the candidates */
     int candidate = -1;
-    size_t candidate_left = page->size;
+    size_t candidate_left = page->left;
     for (int i = 0; i < RECENT_ALLOC_AMT; i++) {
         if (alloc_candidates[i] == NULL) {
+            WPA_DEBUG("[wpalloc] NULL entry! Added page to opts\n");
             alloc_candidates[i] = page;
             return entry->addr;
         }
-        if (alloc_candidates[i]->left < candidate_left)
+        WPA_DEBUG("[wpalloc] Candidate %i (%p) has %u left, %u\n", i,
+                  alloc_candidates[i]->base,alloc_candidates[i]->left, page->left);
+        if (alloc_candidates[i]->left < candidate_left) {
             candidate = i;
+            candidate_left = alloc_candidates[i]->left;
+        }
     }
 
-    if (candidate >= 0 && candidate_left < page->left)
+    if (candidate >= 0 && candidate_left < page->left) {
         alloc_candidates[candidate] = page;
+        WPA_DEBUG("[wpalloc] Added page %p to opts\n", page->base);
+    }
 
-    WPA_DEBUG("[wpalloc] ALLOCing %p\n", entry->addr);
+    WPA_DEBUG("[wpalloc] ALLOCing %u n %p\n", size, entry->addr);
     return entry->addr;
 }
 
@@ -152,6 +166,7 @@ void wpfree(void *ptr)
                         break;
                     }
                 }
+                WPA_DEBUG("[wpdebug] Page %p empty, freeing...\n");
                 munmap(entry->page->base, entry->page->size);
             }
 

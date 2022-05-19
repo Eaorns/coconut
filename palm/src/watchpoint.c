@@ -96,23 +96,23 @@ void wp_page_inc(void *addr)
         page_table[PAGE_TABLE_BASE(addr)] = page;
 
         WP_DEBUG("[watchpoint handler] Calling mprotect...\n");
-        if (mprotect(addr, PAGE_SIZE, PROT_READ) != 0) {
-            WP_DEBUG("[watchpoint handler] Error calling mprotect: ");
-            switch (errno) {
-                case EACCES:
-                    WP_DEBUG("EACCES\n");
-                    break;
-                case EINVAL:
-                    WP_DEBUG("EINVAL\n");
-                    break;
-                case ENOMEM:
-                    WP_DEBUG("ENOMEM\n");
-                    break;
-                default:
-                    WP_DEBUG("UNKNOWN ERROR\n");
-            }
-            return;
-        }
+        // if (mprotect(addr, PAGE_SIZE, PROT_READ) != 0) {
+        //     WP_DEBUG("[watchpoint handler] Error calling mprotect: ");
+        //     switch (errno) {
+        //         case EACCES:
+        //             WP_DEBUG("EACCES\n");
+        //             break;
+        //         case EINVAL:
+        //             WP_DEBUG("EINVAL\n");
+        //             break;
+        //         case ENOMEM:
+        //             WP_DEBUG("ENOMEM\n");
+        //             break;
+        //         default:
+        //             WP_DEBUG("UNKNOWN ERROR\n");
+        //     }
+        //     return;
+        // }
     }
     WP_DEBUG("[watchpoint handler] Address protected!\n");
 }
@@ -139,7 +139,7 @@ void wp_page_dec(void *addr)
         }
 
         /* Remove protection from page */
-        mprotect(addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
+        //mprotect(addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
         free(page);
     }
 }
@@ -232,7 +232,7 @@ void watchpoint_sigsegv(int signo, siginfo_t *info, void *vcontext)
     context->uc_mcontext.gregs[REG_EFL] |= TRAPFLAG_X86;
 
     wp_page *page = wp_page_get(PAGE_ALIGN(curr_segv_addr));
-    mprotect(page->addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
+    //mprotect(page->addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
 
     return;
 }
@@ -246,7 +246,7 @@ void watchpoint_sigtrap(int signo, siginfo_t *info, void *vcontext)
     context->uc_mcontext.gregs[REG_EFL] ^= TRAPFLAG_X86;
 
     wp_page *page = wp_page_get(PAGE_ALIGN(curr_segv_addr));
-    mprotect(page->addr, PAGE_SIZE, PROT_READ);
+    //mprotect(page->addr, PAGE_SIZE, PROT_READ);
 
     wp_addr *addr = wp_addr_get(curr_segv_addr);
     if (addr != NULL && addr->handler != NULL)
@@ -306,11 +306,13 @@ int watchpoint_fini()
 
 int watchpoint_add(void *addr, wp_handler handler, void *data)
 {
+    WP_DEBUG("[watchpoint handler] Registering %p with handler %p and userdata %p\n", addr, (void*)handler, data);
     return (wp_addr_add(addr, handler, data) != NULL);
 }
 
 int watchpoint_rem(void *addr)
 {
+    WP_DEBUG("[watchpoint handler] Removing %p\n", addr);
     return wp_addr_rem(addr);
 }
 
@@ -320,7 +322,7 @@ void watchpoint_disable_all()
     for (int i = 0; i < PAGE_TABLE_SIZE; i++) {
         curr = page_table[i];
         while (curr) {
-            mprotect(curr->addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
+            //mprotect(curr->addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
             curr = curr->next;
         }
     }
@@ -332,7 +334,7 @@ void watchpoint_enable_all()
     for (int i = 0; i < PAGE_TABLE_SIZE; i++) {
         curr = page_table[i];
         while (curr) {
-            mprotect(curr->addr, PAGE_SIZE, PROT_READ);
+            //mprotect(curr->addr, PAGE_SIZE, PROT_READ);
             curr = curr->next;
         }
     }

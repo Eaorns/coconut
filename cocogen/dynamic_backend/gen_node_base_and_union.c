@@ -20,6 +20,7 @@ node_st *dynamicGenBaseNodeInit(node_st *root)
     OUT_FIELD("int node_id_ctr = 0");
     OUT_START_FUNC("%s *NewNode()", basic_node_type);
     OUT_FIELD("%s *node = MEMmalloc(sizeof(%s))", basic_node_type, basic_node_type);
+    OUT_FIELD("NODE_HIST(node) = MEMmalloc(sizeof(ccn_hist))", basic_node_type, basic_node_type);
     OUT_FIELD("NODE_TYPE(node) = NT_NULL");
     OUT_FIELD("NODE_CHILDREN(node) = NULL");
     OUT_FIELD("NODE_FILENAME(node) = NULL");
