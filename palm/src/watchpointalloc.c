@@ -22,7 +22,8 @@
 
 #define RECENT_ALLOC_AMT 8
 
-#define ALLOC_TABLE_SIZE 4096
+// #define ALLOC_TABLE_SIZE 4096
+#define ALLOC_TABLE_SIZE 2048
 #define ALLOC_TABLE_BASE(addr) ((long)addr % ALLOC_TABLE_SIZE)
 
 typedef struct apage {
@@ -56,17 +57,22 @@ int wpalloc_fini()
 {
     wpa_alloc *curr, *next;
     for (int i = 0; i < ALLOC_TABLE_SIZE; i++) {
+        // printf("[!] Freeing table entry %i\n", i);
         curr = alloc_table[i];
         while (curr != NULL) {
+            // TODO this generates SIGSEGV with ALLOC_TABLE_SIZE 4096????
+            // printf("[!] Freeing entry %p...\n", curr);
             next = curr->next;
             curr->page->allocs--;
             if (curr->page->allocs == 0) {
+                // printf("[!] Unmapping...\n");
                 munmap(curr->page->base, curr->page->size);
                 free(curr->page);
             }
             free(curr);
             curr = next;
         }
+        // printf("[!] Done with %i!\n", i);
     }
 
     free(alloc_candidates);

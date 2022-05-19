@@ -12,6 +12,7 @@
 
 
 static char *basic_node_type = "node_st";
+bool gen_union_hist = false;
 
 node_st *dynamicGenBaseNodeInit(node_st *root)
 {
@@ -39,6 +40,14 @@ node_st *dynamicGenBaseNodeInit(node_st *root)
 node_st *dynamicGenBaseNode(node_st *root)
 {
     GeneratorContext *ctx = globals.gen_ctx;
+    OUT("#define HIST_TRAVERSAL(n) ((n)->trav)\n");
+    OUT("#define HIST_NEXT(n) ((n)->next)\n");
+    OUT_TYPEDEF_STRUCT("ccn_hist");
+    OUT_FIELD("union HIST_DATA data");
+    OUT_FIELD("enum ccn_traversal_type trav");
+    OUT_FIELD("struct ccn_hist *next");
+    OUT_TYPEDEF_STRUCT_END("ccn_hist");
+
     OUT("#define NODE_TYPE(n) ((n)->nodetype)\n");
     OUT("#define NODE_CHILDREN(n) ((n)->children)\n");
     OUT("#define NODE_NUMCHILDREN(n) ((n)->num_children)\n");
@@ -48,10 +57,12 @@ node_st *dynamicGenBaseNode(node_st *root)
     OUT("#define NODE_BCOL(n) ((n)->begin_col)\n");
     OUT("#define NODE_ECOL(n) ((n)->end_col)\n");
     OUT("#define NODE_ID(n) ((n)->id)\n");
+    OUT("#define NODE_HIST(n) ((n)->hist)\n");
     OUT("#define NODE_PARENT(n) ((n)->parent)\n");
     OUT_TYPEDEF_STRUCT("ccn_node");
     OUT_FIELD("enum ccn_nodetype nodetype");
     OUT_FIELD("union NODE_DATA data");
+    OUT_FIELD("ccn_hist *hist");
     OUT_FIELD("struct ccn_node **children");
     OUT_FIELD("char *filename");
     OUT_FIELD("long int num_children");
@@ -70,6 +81,13 @@ node_st *dynamicGenBaseNode(node_st *root)
 node_st *DGBUast(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
+    // TODO move to own traversal
+    gen_union_hist = true;
+    OUT_UNION("HIST_DATA");
+    TRAVchildren(node);
+    OUT_STRUCT_END();
+    gen_union_hist = false;
+
     OUT_UNION("NODE_DATA");
     TRAVchildren(node);
     OUT_STRUCT_END();
@@ -81,6 +99,9 @@ node_st *DGBUinode(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
     TRAVopt(INODE_NEXT(node));
-    OUT_FIELD("struct NODE_DATA_%s *N_%s", ID_UPR((INODE_NAME(node))), ID_LWR(INODE_NAME(node)));
+    if (gen_union_hist)
+        OUT_FIELD("struct NODE_HIST_%s *NH_%s", ID_UPR((INODE_NAME(node))), ID_LWR(INODE_NAME(node)));
+    else
+        OUT_FIELD("struct NODE_DATA_%s *N_%s", ID_UPR((INODE_NAME(node))), ID_LWR(INODE_NAME(node)));
     return node;
 }

@@ -91,6 +91,8 @@ char *FMTattributeTypeToString(enum attribute_type type)
 char *FMTattributeTypeName(enum attribute_type type)
 {
     switch (type) {
+    case AT_NULL:
+        return "NULL";
     case AT_user:
         return "user";
     case AT_link:

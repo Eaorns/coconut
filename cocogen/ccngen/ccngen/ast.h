@@ -4,6 +4,7 @@
 #include "ccngen/enum.h"
 typedef struct ccn_node node_st;
 enum H_DATTYPES {
+    HDT_NULL,
     HDT_user,
     HDT_link,
     HDT_link_or_enum,
@@ -23,107 +24,10 @@ enum H_DATTYPES {
     HDT_uint64,
 };
 
-struct hist_item_user {
+struct hist_item {
     void *val;
     void *rip;
-    node_st *prev_parent;
     struct hist_item_user *next;
-};
-
-struct hist_item_link {
-    node_st *val;
-    void *rip;
-    struct hist_item_link *next;
-};
-
-struct hist_item_link_or_enum {
-    int val;
-    void *rip;
-    struct hist_item_link_or_enum *next;
-};
-
-struct hist_item_int {
-    int val;
-    void *rip;
-    struct hist_item_int *next;
-};
-
-struct hist_item_string {
-    char * val;
-    void *rip;
-    struct hist_item_string *next;
-};
-
-struct hist_item_bool {
-    bool val;
-    void *rip;
-    struct hist_item_bool *next;
-};
-
-struct hist_item_int8 {
-    int8_t val;
-    void *rip;
-    struct hist_item_int8 *next;
-};
-
-struct hist_item_int16 {
-    int16_t val;
-    void *rip;
-    struct hist_item_int16 *next;
-};
-
-struct hist_item_int32 {
-    int32_t val;
-    void *rip;
-    struct hist_item_int32 *next;
-};
-
-struct hist_item_int64 {
-    int64_t val;
-    void *rip;
-    struct hist_item_int64 *next;
-};
-
-struct hist_item_float {
-    float val;
-    void *rip;
-    struct hist_item_float *next;
-};
-
-struct hist_item_double {
-    double val;
-    void *rip;
-    struct hist_item_double *next;
-};
-
-struct hist_item_uint {
-    unsigned int val;
-    void *rip;
-    struct hist_item_uint *next;
-};
-
-struct hist_item_uint8 {
-    uint8_t val;
-    void *rip;
-    struct hist_item_uint8 *next;
-};
-
-struct hist_item_uint16 {
-    uint16_t val;
-    void *rip;
-    struct hist_item_uint16 *next;
-};
-
-struct hist_item_uint32 {
-    uint32_t val;
-    void *rip;
-    struct hist_item_uint32 *next;
-};
-
-struct hist_item_uint64 {
-    uint64_t val;
-    void *rip;
-    struct hist_item_uint64 *next;
 };
 
 struct NODE_DATA_ID {
@@ -141,27 +45,6 @@ struct NODE_DATA_ID {
     int row;
     int col_begin;
     int col_end;
-    
-    struct NODE_HIST_ID *hist;
-};
-
-struct NODE_HIST_ID {
-    union HIST_ID {
-        struct HIST_ITEMS_ID {
-            struct hist_item_link *next;
-            struct hist_item_string *orig;
-            struct hist_item_string *lwr;
-            struct hist_item_string *upr;
-            struct hist_item_int *row;
-            struct hist_item_int *col_begin;
-            struct hist_item_int *col_end;
-        } hist_items;
-
-        void *hist_list[7];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_ID *next;
 };
 
 struct NODE_DATA_IENUM {
@@ -177,25 +60,6 @@ struct NODE_DATA_IENUM {
     } ienum_children;
 
     char * iinfo;
-    
-    struct NODE_HIST_IENUM *hist;
-};
-
-struct NODE_HIST_IENUM {
-    union HIST_IENUM {
-        struct HIST_ITEMS_IENUM {
-            struct hist_item_link *vals;
-            struct hist_item_link *name;
-            struct hist_item_link *iprefix;
-            struct hist_item_link *next;
-            struct hist_item_string *iinfo;
-        } hist_items;
-
-        void *hist_list[5];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_IENUM *next;
 };
 
 struct NODE_DATA_ATTRIBUTE {
@@ -212,26 +76,6 @@ struct NODE_DATA_ATTRIBUTE {
 
     enum attribute_type type;
     int in_constructor;
-    
-    struct NODE_HIST_ATTRIBUTE *hist;
-};
-
-struct NODE_HIST_ATTRIBUTE {
-    union HIST_ATTRIBUTE {
-        struct HIST_ITEMS_ATTRIBUTE {
-            struct hist_item_link *name;
-            struct hist_item_link *type_reference;
-            struct hist_item_link *lifetimes;
-            struct hist_item_link *next;
-            struct hist_item_link_or_enum *type;
-            struct hist_item_int *in_constructor;
-        } hist_items;
-
-        void *hist_list[6];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_ATTRIBUTE *next;
 };
 
 struct NODE_DATA_ITRAVDATA {
@@ -247,25 +91,6 @@ struct NODE_DATA_ITRAVDATA {
 
     enum attribute_type type;
     char * include_file;
-    
-    struct NODE_HIST_ITRAVDATA *hist;
-};
-
-struct NODE_HIST_ITRAVDATA {
-    union HIST_ITRAVDATA {
-        struct HIST_ITEMS_ITRAVDATA {
-            struct hist_item_link *name;
-            struct hist_item_link *type_reference;
-            struct hist_item_link *next;
-            struct hist_item_link_or_enum *type;
-            struct hist_item_string *include_file;
-        } hist_items;
-
-        void *hist_list[5];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_ITRAVDATA *next;
 };
 
 struct NODE_DATA_SETOPERATION {
@@ -279,23 +104,6 @@ struct NODE_DATA_SETOPERATION {
     } setoperation_children;
 
     enum setoperation_type type;
-    
-    struct NODE_HIST_SETOPERATION *hist;
-};
-
-struct NODE_HIST_SETOPERATION {
-    union HIST_SETOPERATION {
-        struct HIST_ITEMS_SETOPERATION {
-            struct hist_item_link *left;
-            struct hist_item_link *right;
-            struct hist_item_link_or_enum *type;
-        } hist_items;
-
-        void *hist_list[3];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_SETOPERATION *next;
 };
 
 struct NODE_DATA_SETLITERAL {
@@ -309,23 +117,6 @@ struct NODE_DATA_SETLITERAL {
         node_st *setliteral_children_at[3];
     } setliteral_children;
 
-    
-    struct NODE_HIST_SETLITERAL *hist;
-};
-
-struct NODE_HIST_SETLITERAL {
-    union HIST_SETLITERAL {
-        struct HIST_ITEMS_SETLITERAL {
-            struct hist_item_link *reference;
-            struct hist_item_link *left;
-            struct hist_item_link *right;
-        } hist_items;
-
-        void *hist_list[3];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_SETLITERAL *next;
 };
 
 struct NODE_DATA_SETREFERENCE {
@@ -337,21 +128,6 @@ struct NODE_DATA_SETREFERENCE {
         node_st *setreference_children_at[1];
     } setreference_children;
 
-    
-    struct NODE_HIST_SETREFERENCE *hist;
-};
-
-struct NODE_HIST_SETREFERENCE {
-    union HIST_SETREFERENCE {
-        struct HIST_ITEMS_SETREFERENCE {
-            struct hist_item_link *reference;
-        } hist_items;
-
-        void *hist_list[1];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_SETREFERENCE *next;
 };
 
 struct NODE_DATA_STE {
@@ -365,23 +141,6 @@ struct NODE_DATA_STE {
 
     node_st *key;
     node_st *value;
-    
-    struct NODE_HIST_STE *hist;
-};
-
-struct NODE_HIST_STE {
-    union HIST_STE {
-        struct HIST_ITEMS_STE {
-            struct hist_item_link *next;
-            struct hist_item_link *key;
-            struct hist_item_link *value;
-        } hist_items;
-
-        void *hist_list[3];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_STE *next;
 };
 
 struct NODE_DATA_CHILD {
@@ -399,27 +158,6 @@ struct NODE_DATA_CHILD {
     enum child_type type;
     int in_constructor;
     int is_mandatory;
-    
-    struct NODE_HIST_CHILD *hist;
-};
-
-struct NODE_HIST_CHILD {
-    union HIST_CHILD {
-        struct HIST_ITEMS_CHILD {
-            struct hist_item_link *name;
-            struct hist_item_link *lifetimes;
-            struct hist_item_link *next;
-            struct hist_item_link *type_reference;
-            struct hist_item_link_or_enum *type;
-            struct hist_item_int *in_constructor;
-            struct hist_item_int *is_mandatory;
-        } hist_items;
-
-        void *hist_list[7];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_CHILD *next;
 };
 
 struct NODE_DATA_LIFETIME_RANGE {
@@ -434,24 +172,6 @@ struct NODE_DATA_LIFETIME_RANGE {
     bool inclusive;
     int action_id;
     int next_action_id;
-    
-    struct NODE_HIST_LIFETIME_RANGE *hist;
-};
-
-struct NODE_HIST_LIFETIME_RANGE {
-    union HIST_LIFETIME_RANGE {
-        struct HIST_ITEMS_LIFETIME_RANGE {
-            struct hist_item_link *target;
-            struct hist_item_bool *inclusive;
-            struct hist_item_int *action_id;
-            struct hist_item_int *next_action_id;
-        } hist_items;
-
-        void *hist_list[4];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_LIFETIME_RANGE *next;
 };
 
 struct NODE_DATA_ILIFETIME {
@@ -466,24 +186,6 @@ struct NODE_DATA_ILIFETIME {
     } ilifetime_children;
 
     enum lifetime_type type;
-    
-    struct NODE_HIST_ILIFETIME *hist;
-};
-
-struct NODE_HIST_ILIFETIME {
-    union HIST_ILIFETIME {
-        struct HIST_ITEMS_ILIFETIME {
-            struct hist_item_link *begin;
-            struct hist_item_link *end;
-            struct hist_item_link *next;
-            struct hist_item_link_or_enum *type;
-        } hist_items;
-
-        void *hist_list[4];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_ILIFETIME *next;
 };
 
 struct NODE_DATA_INODESET {
@@ -499,25 +201,6 @@ struct NODE_DATA_INODESET {
     } inodeset_children;
 
     char * iinfo;
-    
-    struct NODE_HIST_INODESET *hist;
-};
-
-struct NODE_HIST_INODESET {
-    union HIST_INODESET {
-        struct HIST_ITEMS_INODESET {
-            struct hist_item_link *name;
-            struct hist_item_link *expr;
-            struct hist_item_link *unpacked;
-            struct hist_item_link *next;
-            struct hist_item_string *iinfo;
-        } hist_items;
-
-        void *hist_list[5];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_INODESET *next;
 };
 
 struct NODE_DATA_INODE {
@@ -536,28 +219,6 @@ struct NODE_DATA_INODE {
     char * iifno;
     int is_root;
     int index;
-    
-    struct NODE_HIST_INODE *hist;
-};
-
-struct NODE_HIST_INODE {
-    union HIST_INODE {
-        struct HIST_ITEMS_INODE {
-            struct hist_item_link *name;
-            struct hist_item_link *next;
-            struct hist_item_link *ichildren;
-            struct hist_item_link *iattributes;
-            struct hist_item_link *lifetimes;
-            struct hist_item_string *iifno;
-            struct hist_item_int *is_root;
-            struct hist_item_int *index;
-        } hist_items;
-
-        void *hist_list[8];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_INODE *next;
 };
 
 struct NODE_DATA_IPASS {
@@ -573,25 +234,6 @@ struct NODE_DATA_IPASS {
     } ipass_children;
 
     char * iifno;
-    
-    struct NODE_HIST_IPASS *hist;
-};
-
-struct NODE_HIST_IPASS {
-    union HIST_IPASS {
-        struct HIST_ITEMS_IPASS {
-            struct hist_item_link *name;
-            struct hist_item_link *iprefix;
-            struct hist_item_link *target_func;
-            struct hist_item_link *next;
-            struct hist_item_string *iifno;
-        } hist_items;
-
-        void *hist_list[5];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_IPASS *next;
 };
 
 struct NODE_DATA_ITRAVERSAL {
@@ -609,27 +251,6 @@ struct NODE_DATA_ITRAVERSAL {
 
     int index;
     char * iinfo;
-    
-    struct NODE_HIST_ITRAVERSAL *hist;
-};
-
-struct NODE_HIST_ITRAVERSAL {
-    union HIST_ITRAVERSAL {
-        struct HIST_ITEMS_ITRAVERSAL {
-            struct hist_item_link *name;
-            struct hist_item_link *iprefix;
-            struct hist_item_link *inodes;
-            struct hist_item_link *data;
-            struct hist_item_link *next;
-            struct hist_item_int *index;
-            struct hist_item_string *iinfo;
-        } hist_items;
-
-        void *hist_list[7];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_ITRAVERSAL *next;
 };
 
 struct NODE_DATA_IPHASE {
@@ -648,28 +269,6 @@ struct NODE_DATA_IPHASE {
     int is_start;
     int is_cycle;
     char * iinfo;
-    
-    struct NODE_HIST_IPHASE *hist;
-};
-
-struct NODE_HIST_IPHASE {
-    union HIST_IPHASE {
-        struct HIST_ITEMS_IPHASE {
-            struct hist_item_link *name;
-            struct hist_item_link *iprefix;
-            struct hist_item_link *gate_func;
-            struct hist_item_link *iactions;
-            struct hist_item_link *next;
-            struct hist_item_int *is_start;
-            struct hist_item_int *is_cycle;
-            struct hist_item_string *iinfo;
-        } hist_items;
-
-        void *hist_list[8];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_IPHASE *next;
 };
 
 struct NODE_DATA_IACTIONS {
@@ -683,23 +282,6 @@ struct NODE_DATA_IACTIONS {
     } iactions_children;
 
     int action_id;
-    
-    struct NODE_HIST_IACTIONS *hist;
-};
-
-struct NODE_HIST_IACTIONS {
-    union HIST_IACTIONS {
-        struct HIST_ITEMS_IACTIONS {
-            struct hist_item_link *reference;
-            struct hist_item_link *next;
-            struct hist_item_int *action_id;
-        } hist_items;
-
-        void *hist_list[3];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_IACTIONS *next;
 };
 
 struct NODE_DATA_AST {
@@ -722,32 +304,6 @@ struct NODE_DATA_AST {
     node_st *root_node;
     node_st *start_phase;
     bool uses_unsafe;
-    
-    struct NODE_HIST_AST *hist;
-};
-
-struct NODE_HIST_AST {
-    union HIST_AST {
-        struct HIST_ITEMS_AST {
-            struct hist_item_link *iphases;
-            struct hist_item_link *itraversals;
-            struct hist_item_link *ipasses;
-            struct hist_item_link *inodes;
-            struct hist_item_link *inodesets;
-            struct hist_item_link *enums;
-            struct hist_item_link *stable;
-            struct hist_item_int *num_traversals;
-            struct hist_item_int *num_nodes;
-            struct hist_item_link *root_node;
-            struct hist_item_link *start_phase;
-            struct hist_item_bool *uses_unsafe;
-        } hist_items;
-
-        void *hist_list[12];
-    } hist;
-
-    enum ccn_traversal_type trav;
-    struct NODE_HIST_AST *next;
 };
 
 #define ID_NEXT(n) ((n)->data.N_id->id_children.id_children_st.next)

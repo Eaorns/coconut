@@ -25,7 +25,8 @@ node_st *DGNMinode(node_st *node)
     curr_node_name_upr = ID_UPR(INODE_NAME(node));
     TRAVopt(INODE_ICHILDREN(node));
     TRAVopt(INODE_IATTRIBUTES(node));
-    OUT("#define NODE_HIST_%s(n) ((n)->data.N_%s->hist)\n", curr_node_name_upr, curr_node_name);
+    // TODO name collisions?
+    OUT("#define HIST_%s(n) (((ccn_hist*)n)->data.NH_%s)\n", curr_node_name_upr, curr_node_name);
     curr_node_name_upr = NULL;
     curr_node_name = NULL;
     TRAVopt(INODE_NEXT(node));
