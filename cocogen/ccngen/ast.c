@@ -98,12 +98,19 @@ node_st *ASTid(char * orig, char * lwr, char * Upr) {
     NODE_TYPE(node) = NT_ID;
     node->data.N_id->hist = MEMmalloc(sizeof(struct NODE_HIST_ID));
     ID_NEXT(node) = NULL;
+    watchpoint_add(&(ID_NEXT(node)), &wphandler_id, &(ID_data[0]));
     ID_ORIG(node) = orig;
+    watchpoint_add(&(ID_ORIG(node)), &wphandler_id, &(ID_data[1]));
     ID_LWR(node) = lwr;
+    watchpoint_add(&(ID_LWR(node)), &wphandler_id, &(ID_data[2]));
     ID_UPR(node) = Upr;
+    watchpoint_add(&(ID_UPR(node)), &wphandler_id, &(ID_data[3]));
     ID_ROW(node) = 0;
+    watchpoint_add(&(ID_ROW(node)), &wphandler_id, &(ID_data[4]));
     ID_COL_BEGIN(node) = 0;
+    watchpoint_add(&(ID_COL_BEGIN(node)), &wphandler_id, &(ID_data[5]));
     ID_COL_END(node) = 0;
+    watchpoint_add(&(ID_COL_END(node)), &wphandler_id, &(ID_data[6]));
     NODE_NUMCHILDREN(node) = 1;
     NODE_CHILDREN(node) = node->data.N_id->id_children.id_children_at;
     return node;}
@@ -145,10 +152,15 @@ node_st *ASTienum(node_st *vals, node_st *name, node_st *iprefix, char * iinfo) 
     NODE_TYPE(node) = NT_IENUM;
     node->data.N_ienum->hist = MEMmalloc(sizeof(struct NODE_HIST_IENUM));
     IENUM_VALS(node) = vals;
+    watchpoint_add(&(IENUM_VALS(node)), &wphandler_ienum, &(IENUM_data[0]));
     IENUM_NAME(node) = name;
+    watchpoint_add(&(IENUM_NAME(node)), &wphandler_ienum, &(IENUM_data[1]));
     IENUM_IPREFIX(node) = iprefix;
+    watchpoint_add(&(IENUM_IPREFIX(node)), &wphandler_ienum, &(IENUM_data[2]));
     IENUM_NEXT(node) = NULL;
+    watchpoint_add(&(IENUM_NEXT(node)), &wphandler_ienum, &(IENUM_data[3]));
     IENUM_IINFO(node) = iinfo;
+    watchpoint_add(&(IENUM_IINFO(node)), &wphandler_ienum, &(IENUM_data[4]));
     NODE_NUMCHILDREN(node) = 4;
     NODE_CHILDREN(node) = node->data.N_ienum->ienum_children.ienum_children_at;
     return node;}
@@ -197,11 +209,17 @@ node_st *ASTattribute() {
     NODE_TYPE(node) = NT_ATTRIBUTE;
     node->data.N_attribute->hist = MEMmalloc(sizeof(struct NODE_HIST_ATTRIBUTE));
     ATTRIBUTE_NAME(node) = NULL;
+    watchpoint_add(&(ATTRIBUTE_NAME(node)), &wphandler_attribute, &(ATTRIBUTE_data[0]));
     ATTRIBUTE_TYPE_REFERENCE(node) = NULL;
+    watchpoint_add(&(ATTRIBUTE_TYPE_REFERENCE(node)), &wphandler_attribute, &(ATTRIBUTE_data[1]));
     ATTRIBUTE_LIFETIMES(node) = NULL;
+    watchpoint_add(&(ATTRIBUTE_LIFETIMES(node)), &wphandler_attribute, &(ATTRIBUTE_data[2]));
     ATTRIBUTE_NEXT(node) = NULL;
+    watchpoint_add(&(ATTRIBUTE_NEXT(node)), &wphandler_attribute, &(ATTRIBUTE_data[3]));
     ATTRIBUTE_TYPE(node) = 0;
+    watchpoint_add(&(ATTRIBUTE_TYPE(node)), &wphandler_attribute, &(ATTRIBUTE_data[4]));
     ATTRIBUTE_IN_CONSTRUCTOR(node) = 0;
+    watchpoint_add(&(ATTRIBUTE_IN_CONSTRUCTOR(node)), &wphandler_attribute, &(ATTRIBUTE_data[5]));
     NODE_NUMCHILDREN(node) = 4;
     NODE_CHILDREN(node) = node->data.N_attribute->attribute_children.attribute_children_at;
     return node;}
@@ -248,10 +266,15 @@ node_st *ASTitravdata(node_st *name) {
     NODE_TYPE(node) = NT_ITRAVDATA;
     node->data.N_itravdata->hist = MEMmalloc(sizeof(struct NODE_HIST_ITRAVDATA));
     ITRAVDATA_NAME(node) = name;
+    watchpoint_add(&(ITRAVDATA_NAME(node)), &wphandler_itravdata, &(ITRAVDATA_data[0]));
     ITRAVDATA_TYPE_REFERENCE(node) = NULL;
+    watchpoint_add(&(ITRAVDATA_TYPE_REFERENCE(node)), &wphandler_itravdata, &(ITRAVDATA_data[1]));
     ITRAVDATA_NEXT(node) = NULL;
+    watchpoint_add(&(ITRAVDATA_NEXT(node)), &wphandler_itravdata, &(ITRAVDATA_data[2]));
     ITRAVDATA_TYPE(node) = 0;
+    watchpoint_add(&(ITRAVDATA_TYPE(node)), &wphandler_itravdata, &(ITRAVDATA_data[3]));
     ITRAVDATA_INCLUDE_FILE(node) = NULL;
+    watchpoint_add(&(ITRAVDATA_INCLUDE_FILE(node)), &wphandler_itravdata, &(ITRAVDATA_data[4]));
     NODE_NUMCHILDREN(node) = 3;
     NODE_CHILDREN(node) = node->data.N_itravdata->itravdata_children.itravdata_children_at;
     return node;}
@@ -289,8 +312,11 @@ node_st *ASTsetoperation(node_st *left, node_st *right, enum setoperation_type t
     NODE_TYPE(node) = NT_SETOPERATION;
     node->data.N_setoperation->hist = MEMmalloc(sizeof(struct NODE_HIST_SETOPERATION));
     SETOPERATION_LEFT(node) = left;
+    watchpoint_add(&(SETOPERATION_LEFT(node)), &wphandler_setoperation, &(SETOPERATION_data[0]));
     SETOPERATION_RIGHT(node) = right;
+    watchpoint_add(&(SETOPERATION_RIGHT(node)), &wphandler_setoperation, &(SETOPERATION_data[1]));
     SETOPERATION_TYPE(node) = type;
+    watchpoint_add(&(SETOPERATION_TYPE(node)), &wphandler_setoperation, &(SETOPERATION_data[2]));
     NODE_NUMCHILDREN(node) = 2;
     NODE_CHILDREN(node) = node->data.N_setoperation->setoperation_children.setoperation_children_at;
     return node;}
@@ -323,8 +349,11 @@ node_st *ASTsetliteral(node_st *reference) {
     NODE_TYPE(node) = NT_SETLITERAL;
     node->data.N_setliteral->hist = MEMmalloc(sizeof(struct NODE_HIST_SETLITERAL));
     SETLITERAL_REFERENCE(node) = reference;
+    watchpoint_add(&(SETLITERAL_REFERENCE(node)), &wphandler_setliteral, &(SETLITERAL_data[0]));
     SETLITERAL_LEFT(node) = NULL;
+    watchpoint_add(&(SETLITERAL_LEFT(node)), &wphandler_setliteral, &(SETLITERAL_data[1]));
     SETLITERAL_RIGHT(node) = NULL;
+    watchpoint_add(&(SETLITERAL_RIGHT(node)), &wphandler_setliteral, &(SETLITERAL_data[2]));
     NODE_NUMCHILDREN(node) = 3;
     NODE_CHILDREN(node) = node->data.N_setliteral->setliteral_children.setliteral_children_at;
     return node;}
@@ -353,6 +382,7 @@ node_st *ASTsetreference() {
     NODE_TYPE(node) = NT_SETREFERENCE;
     node->data.N_setreference->hist = MEMmalloc(sizeof(struct NODE_HIST_SETREFERENCE));
     SETREFERENCE_REFERENCE(node) = NULL;
+    watchpoint_add(&(SETREFERENCE_REFERENCE(node)), &wphandler_setreference, &(SETREFERENCE_data[0]));
     NODE_NUMCHILDREN(node) = 1;
     NODE_CHILDREN(node) = node->data.N_setreference->setreference_children.setreference_children_at;
     return node;}
@@ -395,8 +425,11 @@ node_st *ASTste() {
     NODE_TYPE(node) = NT_STE;
     node->data.N_ste->hist = MEMmalloc(sizeof(struct NODE_HIST_STE));
     STE_NEXT(node) = NULL;
+    watchpoint_add(&(STE_NEXT(node)), &wphandler_ste, &(STE_data[0]));
     STE_KEY(node) = NULL;
+    watchpoint_add(&(STE_KEY(node)), &wphandler_ste, &(STE_data[1]));
     STE_VALUE(node) = NULL;
+    watchpoint_add(&(STE_VALUE(node)), &wphandler_ste, &(STE_data[2]));
     NODE_NUMCHILDREN(node) = 1;
     NODE_CHILDREN(node) = node->data.N_ste->ste_children.ste_children_at;
     return node;}
@@ -452,12 +485,19 @@ node_st *ASTchild(node_st *name) {
     NODE_TYPE(node) = NT_CHILD;
     node->data.N_child->hist = MEMmalloc(sizeof(struct NODE_HIST_CHILD));
     CHILD_NAME(node) = name;
+    watchpoint_add(&(CHILD_NAME(node)), &wphandler_child, &(CHILD_data[0]));
     CHILD_LIFETIMES(node) = NULL;
+    watchpoint_add(&(CHILD_LIFETIMES(node)), &wphandler_child, &(CHILD_data[1]));
     CHILD_NEXT(node) = NULL;
+    watchpoint_add(&(CHILD_NEXT(node)), &wphandler_child, &(CHILD_data[2]));
     CHILD_TYPE_REFERENCE(node) = NULL;
+    watchpoint_add(&(CHILD_TYPE_REFERENCE(node)), &wphandler_child, &(CHILD_data[3]));
     CHILD_TYPE(node) = 0;
+    watchpoint_add(&(CHILD_TYPE(node)), &wphandler_child, &(CHILD_data[4]));
     CHILD_IN_CONSTRUCTOR(node) = 0;
+    watchpoint_add(&(CHILD_IN_CONSTRUCTOR(node)), &wphandler_child, &(CHILD_data[5]));
     CHILD_IS_MANDATORY(node) = 0;
+    watchpoint_add(&(CHILD_IS_MANDATORY(node)), &wphandler_child, &(CHILD_data[6]));
     NODE_NUMCHILDREN(node) = 4;
     NODE_CHILDREN(node) = node->data.N_child->child_children.child_children_at;
     return node;}
@@ -507,9 +547,13 @@ node_st *ASTlifetime_range() {
     NODE_TYPE(node) = NT_LIFETIME_RANGE;
     node->data.N_lifetime_range->hist = MEMmalloc(sizeof(struct NODE_HIST_LIFETIME_RANGE));
     LIFETIME_RANGE_TARGET(node) = NULL;
+    watchpoint_add(&(LIFETIME_RANGE_TARGET(node)), &wphandler_lifetime_range, &(LIFETIME_RANGE_data[0]));
     LIFETIME_RANGE_INCLUSIVE(node) = false;
+    watchpoint_add(&(LIFETIME_RANGE_INCLUSIVE(node)), &wphandler_lifetime_range, &(LIFETIME_RANGE_data[1]));
     LIFETIME_RANGE_ACTION_ID(node) = 0;
+    watchpoint_add(&(LIFETIME_RANGE_ACTION_ID(node)), &wphandler_lifetime_range, &(LIFETIME_RANGE_data[2]));
     LIFETIME_RANGE_NEXT_ACTION_ID(node) = 0;
+    watchpoint_add(&(LIFETIME_RANGE_NEXT_ACTION_ID(node)), &wphandler_lifetime_range, &(LIFETIME_RANGE_data[3]));
     NODE_NUMCHILDREN(node) = 1;
     NODE_CHILDREN(node) = node->data.N_lifetime_range->lifetime_range_children.lifetime_range_children_at;
     return node;}
@@ -549,9 +593,13 @@ node_st *ASTilifetime() {
     NODE_TYPE(node) = NT_ILIFETIME;
     node->data.N_ilifetime->hist = MEMmalloc(sizeof(struct NODE_HIST_ILIFETIME));
     ILIFETIME_BEGIN(node) = NULL;
+    watchpoint_add(&(ILIFETIME_BEGIN(node)), &wphandler_ilifetime, &(ILIFETIME_data[0]));
     ILIFETIME_END(node) = NULL;
+    watchpoint_add(&(ILIFETIME_END(node)), &wphandler_ilifetime, &(ILIFETIME_data[1]));
     ILIFETIME_NEXT(node) = NULL;
+    watchpoint_add(&(ILIFETIME_NEXT(node)), &wphandler_ilifetime, &(ILIFETIME_data[2]));
     ILIFETIME_TYPE(node) = 0;
+    watchpoint_add(&(ILIFETIME_TYPE(node)), &wphandler_ilifetime, &(ILIFETIME_data[3]));
     NODE_NUMCHILDREN(node) = 3;
     NODE_CHILDREN(node) = node->data.N_ilifetime->ilifetime_children.ilifetime_children_at;
     return node;}
@@ -593,10 +641,15 @@ node_st *ASTinodeset() {
     NODE_TYPE(node) = NT_INODESET;
     node->data.N_inodeset->hist = MEMmalloc(sizeof(struct NODE_HIST_INODESET));
     INODESET_NAME(node) = NULL;
+    watchpoint_add(&(INODESET_NAME(node)), &wphandler_inodeset, &(INODESET_data[0]));
     INODESET_EXPR(node) = NULL;
+    watchpoint_add(&(INODESET_EXPR(node)), &wphandler_inodeset, &(INODESET_data[1]));
     INODESET_UNPACKED(node) = NULL;
+    watchpoint_add(&(INODESET_UNPACKED(node)), &wphandler_inodeset, &(INODESET_data[2]));
     INODESET_NEXT(node) = NULL;
+    watchpoint_add(&(INODESET_NEXT(node)), &wphandler_inodeset, &(INODESET_data[3]));
     INODESET_IINFO(node) = NULL;
+    watchpoint_add(&(INODESET_IINFO(node)), &wphandler_inodeset, &(INODESET_data[4]));
     NODE_NUMCHILDREN(node) = 4;
     NODE_CHILDREN(node) = node->data.N_inodeset->inodeset_children.inodeset_children_at;
     return node;}
@@ -654,13 +707,21 @@ node_st *ASTinode(node_st *name, char * iifno) {
     NODE_TYPE(node) = NT_INODE;
     node->data.N_inode->hist = MEMmalloc(sizeof(struct NODE_HIST_INODE));
     INODE_NAME(node) = name;
+    watchpoint_add(&(INODE_NAME(node)), &wphandler_inode, &(INODE_data[0]));
     INODE_NEXT(node) = NULL;
+    watchpoint_add(&(INODE_NEXT(node)), &wphandler_inode, &(INODE_data[1]));
     INODE_ICHILDREN(node) = NULL;
+    watchpoint_add(&(INODE_ICHILDREN(node)), &wphandler_inode, &(INODE_data[2]));
     INODE_IATTRIBUTES(node) = NULL;
+    watchpoint_add(&(INODE_IATTRIBUTES(node)), &wphandler_inode, &(INODE_data[3]));
     INODE_LIFETIMES(node) = NULL;
+    watchpoint_add(&(INODE_LIFETIMES(node)), &wphandler_inode, &(INODE_data[4]));
     INODE_IIFNO(node) = iifno;
+    watchpoint_add(&(INODE_IIFNO(node)), &wphandler_inode, &(INODE_data[5]));
     INODE_IS_ROOT(node) = 0;
+    watchpoint_add(&(INODE_IS_ROOT(node)), &wphandler_inode, &(INODE_data[6]));
     INODE_INDEX(node) = 0;
+    watchpoint_add(&(INODE_INDEX(node)), &wphandler_inode, &(INODE_data[7]));
     NODE_NUMCHILDREN(node) = 5;
     NODE_CHILDREN(node) = node->data.N_inode->inode_children.inode_children_at;
     return node;}
@@ -702,10 +763,15 @@ node_st *ASTipass(node_st *name, char * iifno) {
     NODE_TYPE(node) = NT_IPASS;
     node->data.N_ipass->hist = MEMmalloc(sizeof(struct NODE_HIST_IPASS));
     IPASS_NAME(node) = name;
+    watchpoint_add(&(IPASS_NAME(node)), &wphandler_ipass, &(IPASS_data[0]));
     IPASS_IPREFIX(node) = NULL;
+    watchpoint_add(&(IPASS_IPREFIX(node)), &wphandler_ipass, &(IPASS_data[1]));
     IPASS_TARGET_FUNC(node) = NULL;
+    watchpoint_add(&(IPASS_TARGET_FUNC(node)), &wphandler_ipass, &(IPASS_data[2]));
     IPASS_NEXT(node) = NULL;
+    watchpoint_add(&(IPASS_NEXT(node)), &wphandler_ipass, &(IPASS_data[3]));
     IPASS_IIFNO(node) = iifno;
+    watchpoint_add(&(IPASS_IIFNO(node)), &wphandler_ipass, &(IPASS_data[4]));
     NODE_NUMCHILDREN(node) = 4;
     NODE_CHILDREN(node) = node->data.N_ipass->ipass_children.ipass_children_at;
     return node;}
@@ -756,12 +822,19 @@ node_st *ASTitraversal(node_st *name) {
     NODE_TYPE(node) = NT_ITRAVERSAL;
     node->data.N_itraversal->hist = MEMmalloc(sizeof(struct NODE_HIST_ITRAVERSAL));
     ITRAVERSAL_NAME(node) = name;
+    watchpoint_add(&(ITRAVERSAL_NAME(node)), &wphandler_itraversal, &(ITRAVERSAL_data[0]));
     ITRAVERSAL_IPREFIX(node) = NULL;
+    watchpoint_add(&(ITRAVERSAL_IPREFIX(node)), &wphandler_itraversal, &(ITRAVERSAL_data[1]));
     ITRAVERSAL_INODES(node) = NULL;
+    watchpoint_add(&(ITRAVERSAL_INODES(node)), &wphandler_itraversal, &(ITRAVERSAL_data[2]));
     ITRAVERSAL_DATA(node) = NULL;
+    watchpoint_add(&(ITRAVERSAL_DATA(node)), &wphandler_itraversal, &(ITRAVERSAL_data[3]));
     ITRAVERSAL_NEXT(node) = NULL;
+    watchpoint_add(&(ITRAVERSAL_NEXT(node)), &wphandler_itraversal, &(ITRAVERSAL_data[4]));
     ITRAVERSAL_INDEX(node) = 0;
+    watchpoint_add(&(ITRAVERSAL_INDEX(node)), &wphandler_itraversal, &(ITRAVERSAL_data[5]));
     ITRAVERSAL_IINFO(node) = NULL;
+    watchpoint_add(&(ITRAVERSAL_IINFO(node)), &wphandler_itraversal, &(ITRAVERSAL_data[6]));
     NODE_NUMCHILDREN(node) = 5;
     NODE_CHILDREN(node) = node->data.N_itraversal->itraversal_children.itraversal_children_at;
     return node;}
@@ -819,13 +892,21 @@ node_st *ASTiphase(node_st *name, int is_start) {
     NODE_TYPE(node) = NT_IPHASE;
     node->data.N_iphase->hist = MEMmalloc(sizeof(struct NODE_HIST_IPHASE));
     IPHASE_NAME(node) = name;
+    watchpoint_add(&(IPHASE_NAME(node)), &wphandler_iphase, &(IPHASE_data[0]));
     IPHASE_IPREFIX(node) = NULL;
+    watchpoint_add(&(IPHASE_IPREFIX(node)), &wphandler_iphase, &(IPHASE_data[1]));
     IPHASE_GATE_FUNC(node) = NULL;
+    watchpoint_add(&(IPHASE_GATE_FUNC(node)), &wphandler_iphase, &(IPHASE_data[2]));
     IPHASE_IACTIONS(node) = NULL;
+    watchpoint_add(&(IPHASE_IACTIONS(node)), &wphandler_iphase, &(IPHASE_data[3]));
     IPHASE_NEXT(node) = NULL;
+    watchpoint_add(&(IPHASE_NEXT(node)), &wphandler_iphase, &(IPHASE_data[4]));
     IPHASE_IS_START(node) = is_start;
+    watchpoint_add(&(IPHASE_IS_START(node)), &wphandler_iphase, &(IPHASE_data[5]));
     IPHASE_IS_CYCLE(node) = 0;
+    watchpoint_add(&(IPHASE_IS_CYCLE(node)), &wphandler_iphase, &(IPHASE_data[6]));
     IPHASE_IINFO(node) = NULL;
+    watchpoint_add(&(IPHASE_IINFO(node)), &wphandler_iphase, &(IPHASE_data[7]));
     NODE_NUMCHILDREN(node) = 5;
     NODE_CHILDREN(node) = node->data.N_iphase->iphase_children.iphase_children_at;
     return node;}
@@ -863,8 +944,11 @@ node_st *ASTiactions() {
     NODE_TYPE(node) = NT_IACTIONS;
     node->data.N_iactions->hist = MEMmalloc(sizeof(struct NODE_HIST_IACTIONS));
     IACTIONS_REFERENCE(node) = NULL;
+    watchpoint_add(&(IACTIONS_REFERENCE(node)), &wphandler_iactions, &(IACTIONS_data[0]));
     IACTIONS_NEXT(node) = NULL;
+    watchpoint_add(&(IACTIONS_NEXT(node)), &wphandler_iactions, &(IACTIONS_data[1]));
     IACTIONS_ACTION_ID(node) = 0;
+    watchpoint_add(&(IACTIONS_ACTION_ID(node)), &wphandler_iactions, &(IACTIONS_data[2]));
     NODE_NUMCHILDREN(node) = 2;
     NODE_CHILDREN(node) = node->data.N_iactions->iactions_children.iactions_children_at;
     return node;}
@@ -940,17 +1024,29 @@ node_st *ASTast() {
     NODE_TYPE(node) = NT_AST;
     node->data.N_ast->hist = MEMmalloc(sizeof(struct NODE_HIST_AST));
     AST_IPHASES(node) = NULL;
+    watchpoint_add(&(AST_IPHASES(node)), &wphandler_ast, &(AST_data[0]));
     AST_ITRAVERSALS(node) = NULL;
+    watchpoint_add(&(AST_ITRAVERSALS(node)), &wphandler_ast, &(AST_data[1]));
     AST_IPASSES(node) = NULL;
+    watchpoint_add(&(AST_IPASSES(node)), &wphandler_ast, &(AST_data[2]));
     AST_INODES(node) = NULL;
+    watchpoint_add(&(AST_INODES(node)), &wphandler_ast, &(AST_data[3]));
     AST_INODESETS(node) = NULL;
+    watchpoint_add(&(AST_INODESETS(node)), &wphandler_ast, &(AST_data[4]));
     AST_ENUMS(node) = NULL;
+    watchpoint_add(&(AST_ENUMS(node)), &wphandler_ast, &(AST_data[5]));
     AST_STABLE(node) = NULL;
+    watchpoint_add(&(AST_STABLE(node)), &wphandler_ast, &(AST_data[6]));
     AST_NUM_TRAVERSALS(node) = 0;
+    watchpoint_add(&(AST_NUM_TRAVERSALS(node)), &wphandler_ast, &(AST_data[7]));
     AST_NUM_NODES(node) = 0;
+    watchpoint_add(&(AST_NUM_NODES(node)), &wphandler_ast, &(AST_data[8]));
     AST_ROOT_NODE(node) = NULL;
+    watchpoint_add(&(AST_ROOT_NODE(node)), &wphandler_ast, &(AST_data[9]));
     AST_START_PHASE(node) = NULL;
+    watchpoint_add(&(AST_START_PHASE(node)), &wphandler_ast, &(AST_data[10]));
     AST_USES_UNSAFE(node) = false;
+    watchpoint_add(&(AST_USES_UNSAFE(node)), &wphandler_ast, &(AST_data[11]));
     NODE_NUMCHILDREN(node) = 7;
     NODE_CHILDREN(node) = node->data.N_ast->ast_children.ast_children_at;
     return node;}
