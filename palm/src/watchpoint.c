@@ -11,7 +11,7 @@
 
 extern int errno;
 
-#define DO_WP_DEBUG
+// #define DO_WP_DEBUG
 #ifdef DO_WP_DEBUG
 #define WP_DEBUG printf
 #else
@@ -36,7 +36,7 @@ extern int errno;
 #define TRAPFLAG_X86 0x0100
 #define TRAPFLAG TRAPFLAG_X86
 
-typedef void (*wp_handler)(void*, long, void*, void*);
+typedef void (*wp_handler)(void*, void*, void*, void*);
 
 /* Struct to keep track of which pages contain breakpoints,
  * Also stores how many there are in the page. */
@@ -61,7 +61,7 @@ int num_watchpoints;
 wp_page **page_table;
 wp_addr **wp_table;
 void *curr_segv_addr;
-long prev_val;
+void *prev_val;
 
 /**
  * Retrieve a wp_page entry from the page table,
@@ -193,11 +193,10 @@ int wp_addr_rem(void *addr)
         return -1;
     }
 
-    if (prev == NULL) {void watchpoint_enable_all();
-
+    if (prev == NULL) {
         // TODO what about everything before?
-            wp_table[WP_TABLE_BASE(addr)] = curr->next;
-        } else {
+        wp_table[WP_TABLE_BASE(addr)] = curr->next;
+    } else {
         prev->next = curr->next;
     }
     free(curr);
@@ -226,7 +225,7 @@ void watchpoint_sigsegv(int signo, siginfo_t *info, void *vcontext)
     curr_segv_addr = info->si_addr;
 
     WP_DEBUG("[watchpoint handler] Old value: %i\n", *(int*)curr_segv_addr);
-    prev_val = *(long*)curr_segv_addr;
+    prev_val = (void*)(*(long*)curr_segv_addr);
 
     /* Enable single-step flag */
     ucontext_t *context = vcontext;

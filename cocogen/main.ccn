@@ -93,6 +93,7 @@ phase dynamicBackend {
         dynamicGenCopyTraversal;
         dynamicGenFreeTraversal;
         dynamicGenDebugTraversal;
+        dynamicGenDebugFunctions;
         dynamicGenCheckTraversal;
         dynamicGenUserFiles;
         dynamicGenTravFunctions;
@@ -264,6 +265,11 @@ traversal dynamicGenFreeTraversal {
 
 traversal dynamicGenDebugTraversal {
     uid = DGDT
+};
+
+traversal dynamicGenDebugFunctions {
+    uid = DGDF,
+    nodes = {ast, inode, child, attribute}
 };
 
 traversal dynamicGenConstructorCall {
