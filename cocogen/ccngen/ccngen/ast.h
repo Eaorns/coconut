@@ -789,5 +789,6 @@ typedef struct ccn_node {
     // Used by debugger
     int id;
     struct ccn_node *parent;
+    bool trashed;
 } ccn_node;
 

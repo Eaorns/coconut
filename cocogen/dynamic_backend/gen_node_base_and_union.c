@@ -74,6 +74,7 @@ node_st *dynamicGenBaseNode(node_st *root)
     OUT("// Used by debugger\n");
     OUT_FIELD("int id");
     OUT_FIELD("struct ccn_node *parent");
+    OUT_FIELD("bool trashed");
     OUT_TYPEDEF_STRUCT_END("ccn_node");
 
     return root;

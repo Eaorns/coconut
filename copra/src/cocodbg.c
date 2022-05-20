@@ -58,10 +58,14 @@ void print_val(enum H_DATTYPES type, void *data)
             printf("(null)");
             break;
         case HDT_user:
-            printf("user (%p)", (void*)*(long*)data);
+            printf("user (%p)", data);
             break;
         case HDT_link:
-            printf("node %s(%i, %p)", DBGHelper_nodename(NODE_TYPE(*(node_st**)data)), NODE_ID(*(node_st**)data), (void*)*(long*)data);
+            /* Assume the node is invalid if the first value (node_type) is 0 */
+            if (*(int*)data == 0)
+                printf("node (nil)(-1, %p)", data);
+            else
+                printf("node %s(%i, %p)", DBGHelper_nodename(NODE_TYPE(*(node_st**)data)), NODE_ID(*(node_st**)data), data);
             break;
         case HDT_link_or_enum:
             printf("enum %i", *(int*)data);
@@ -157,7 +161,6 @@ int comm_view(char *comm)
         hitem_prev = NULL;
         skipping = false;
         for (j = 0; hitem; j++) {
-            printf("enter %p...\n", hitem);
             if (hitem_prev && hitem->val == hitem_prev->val && hitem->rip == hitem_prev->rip) {
                 if (!skipping) {
                     printf("   ...\n");
@@ -176,16 +179,14 @@ int comm_view(char *comm)
                 skipping = false;
             }
             printf("   #%i ", j);
+            fflush(stdout);
             print_val(DBGHelper_gettype(NODE_TYPE(curr_node), i), &(hitem->val));
             char **funcname = backtrace_symbols(&(hitem->rip), 1);
             printf(" at %s\n", funcname[0]);
             free(funcname);
             hitem_prev = hitem;
-            printf("asdfasdfasdf\n");
             hitem = hitem->next;
-            printf("asdfasdfasdf\n");
         }
-        printf("Done with %i\n", i);
         if (skipping) {
             printf("   #%i ", j-1);
             print_val(DBGHelper_gettype(NODE_TYPE(curr_node), i), &(hitem_prev->val));
