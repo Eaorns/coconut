@@ -132,7 +132,7 @@ int cocodbg_repl()
         line = readline(COCODBG_PROMPT);
         stripped = strip(line);
 
-        if (stripped) {
+        if (stripped && *stripped) {
             char* expansion;
             int hist_retcode = history_expand(stripped, &expansion);
 
