@@ -775,6 +775,7 @@ typedef struct ccn_hist {
 #define NODE_ID(n) ((n)->id)
 #define NODE_HIST(n) ((n)->hist)
 #define NODE_PARENT(n) ((n)->parent)
+#define NODE_TRASHED(n) ((n)->trashed)
 typedef struct ccn_node {
     enum ccn_nodetype nodetype;
     union NODE_DATA data;

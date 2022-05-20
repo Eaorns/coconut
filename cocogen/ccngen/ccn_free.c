@@ -24,6 +24,7 @@ void throw_in_the_trash(struct ccn_node *node) {
 }
 
 struct ccn_node *DELid(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -40,6 +41,7 @@ struct ccn_node *DELid_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELienum(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -54,6 +56,7 @@ struct ccn_node *DELienum_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELattribute(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -67,6 +70,7 @@ struct ccn_node *DELattribute_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELitravdata(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -81,6 +85,7 @@ struct ccn_node *DELitravdata_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELsetoperation(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -94,6 +99,7 @@ struct ccn_node *DELsetoperation_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELsetliteral(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -107,6 +113,7 @@ struct ccn_node *DELsetliteral_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELsetreference(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -120,6 +127,7 @@ struct ccn_node *DELsetreference_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELste(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -133,6 +141,7 @@ struct ccn_node *DELste_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELchild(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -146,6 +155,7 @@ struct ccn_node *DELchild_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELlifetime_range(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -159,6 +169,7 @@ struct ccn_node *DELlifetime_range_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELilifetime(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -172,6 +183,7 @@ struct ccn_node *DELilifetime_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELinodeset(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -186,6 +198,7 @@ struct ccn_node *DELinodeset_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELinode(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -200,6 +213,7 @@ struct ccn_node *DELinode_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELipass(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -214,6 +228,7 @@ struct ccn_node *DELipass_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELitraversal(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -228,6 +243,7 @@ struct ccn_node *DELitraversal_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELiphase(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -242,6 +258,7 @@ struct ccn_node *DELiphase_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELiactions(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }
@@ -255,6 +272,7 @@ struct ccn_node *DELiactions_real(struct ccn_node *arg_node) {
 }
 
 struct ccn_node *DELast(struct ccn_node *arg_node) {
+    TRAVchildren(arg_node);
     throw_in_the_trash(arg_node);
     return NULL;
 }

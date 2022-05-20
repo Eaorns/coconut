@@ -60,6 +60,7 @@ node_st *dynamicGenBaseNode(node_st *root)
     OUT("#define NODE_ID(n) ((n)->id)\n");
     OUT("#define NODE_HIST(n) ((n)->hist)\n");
     OUT("#define NODE_PARENT(n) ((n)->parent)\n");
+    OUT("#define NODE_TRASHED(n) ((n)->trashed)\n");
     OUT_TYPEDEF_STRUCT("ccn_node");
     OUT_FIELD("enum ccn_nodetype nodetype");
     OUT_FIELD("union NODE_DATA data");

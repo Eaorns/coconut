@@ -76,6 +76,7 @@ node_st *DGFTinode(node_st *node)
     GeneratorContext *ctx = globals.gen_ctx;
     curr_node = node;
     OUT_START_FUNC("struct ccn_node *DEL%s(struct ccn_node *arg_node)", ID_LWR(INODE_NAME(node)));
+    OUT_FIELD("TRAVchildren(arg_node)");
     OUT_FIELD("throw_in_the_trash(arg_node)");
     OUT_FIELD("return NULL");
     OUT_END_FUNC();
