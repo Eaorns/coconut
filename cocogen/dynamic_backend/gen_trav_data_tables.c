@@ -24,7 +24,7 @@ node_st *DGTDTast(node_st *node)
     data->indent = indent;
     TRAVopt(AST_ITRAVERSALS(node));
     // For system traversal(check, free, copy)
-    OUT("TRAVdataNOP, TRAVdataNOP, TRAVdataNOP");
+    OUT("TRAVdataNOP, TRAVdataNOP, TRAVdataNOP, TRAVdataNOP");
     OUT("};\n");
 
     OUT("const ccn_trav_data_ft trav_data_free_vtable[_TRAV_SIZE] = {TRAVdataNOP,");
@@ -32,7 +32,7 @@ node_st *DGTDTast(node_st *node)
     data->indent = indent;
     TRAVopt(AST_ITRAVERSALS(node));
     // For system traversal(check, free, copy)
-    OUT("TRAVdataNOP, TRAVdataNOP, TRAVdataNOP");
+    OUT("TRAVdataNOP, TRAVdataNOP, TRAVdataNOP, TRAVdataNOP");
     OUT("};\n");
 
     return node;

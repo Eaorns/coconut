@@ -11,7 +11,7 @@
 
 extern int errno;
 
-#define WP_DISABLE
+// #define WP_DISABLE
 
 // #define DO_WP_DEBUG
 #ifdef DO_WP_DEBUG
@@ -97,6 +97,7 @@ void wp_page_inc(void *addr)
         page->next = page_table[PAGE_TABLE_BASE(addr)];
         page_table[PAGE_TABLE_BASE(addr)] = page;
 
+        #ifndef WP_DISABLE
         WP_DEBUG("[watchpoint handler] Calling mprotect...\n");
         if (mprotect(addr, PAGE_SIZE, PROT_READ) != 0) {
             WP_DEBUG("[watchpoint handler] Error calling mprotect: ");
@@ -115,6 +116,7 @@ void wp_page_inc(void *addr)
             }
             return;
         }
+        #endif
     }
     WP_DEBUG("[watchpoint handler] Address protected!\n");
 }
@@ -141,7 +143,9 @@ void wp_page_dec(void *addr)
         }
 
         /* Remove protection from page */
+        #ifndef WP_DISABLE
         mprotect(addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
+        #endif
         free(page);
     }
 }
@@ -234,7 +238,9 @@ void watchpoint_sigsegv(int signo, siginfo_t *info, void *vcontext)
     context->uc_mcontext.gregs[REG_EFL] |= TRAPFLAG_X86;
 
     wp_page *page = wp_page_get(PAGE_ALIGN(curr_segv_addr));
+    #ifndef WP_DISABLE
     mprotect(page->addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
+    #endif
 
     return;
 }
@@ -248,7 +254,9 @@ void watchpoint_sigtrap(int signo, siginfo_t *info, void *vcontext)
     context->uc_mcontext.gregs[REG_EFL] ^= TRAPFLAG_X86;
 
     wp_page *page = wp_page_get(PAGE_ALIGN(curr_segv_addr));
+    #ifndef WP_DISABLE
     mprotect(page->addr, PAGE_SIZE, PROT_READ);
+    #endif
 
     wp_addr *addr = wp_addr_get(curr_segv_addr);
     if (addr != NULL && addr->handler != NULL)
@@ -262,8 +270,8 @@ int watchpoint_init()
 {
     WP_DEBUG("[watchpoint handler] Starting watchpoint init...\n");
     num_watchpoints = 0;
-    page_table = malloc(sizeof(void*) * PAGE_TABLE_SIZE);
-    wp_table = malloc(sizeof(void*) * WP_TABLE_SIZE);
+    page_table = calloc(PAGE_TABLE_SIZE, sizeof(void*));
+    wp_table = calloc(WP_TABLE_SIZE, sizeof(void*));
     curr_segv_addr = NULL;
 
     WP_DEBUG("[watchpoint handler] Page size: %li\n", PAGE_SIZE);
@@ -324,8 +332,9 @@ void watchpoint_disable_all()
     for (int i = 0; i < PAGE_TABLE_SIZE; i++) {
         curr = page_table[i];
         while (curr) {
+            #ifndef WP_DISABLE
             mprotect(curr->addr, PAGE_SIZE, PROT_READ | PROT_WRITE);
-            fprintf(stdout, "wp %p\n", curr->addr);
+            #endif
             curr = curr->next;
         }
     }
@@ -337,7 +346,9 @@ void watchpoint_enable_all()
     for (int i = 0; i < PAGE_TABLE_SIZE; i++) {
         curr = page_table[i];
         while (curr) {
+            #ifndef WP_DISABLE
             mprotect(curr->addr, PAGE_SIZE, PROT_READ);
+            #endif
             curr = curr->next;
         }
     }

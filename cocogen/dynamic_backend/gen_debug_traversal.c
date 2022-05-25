@@ -20,6 +20,7 @@ node_st *DGDTast(node_st *node)
     OUT("#include \"ccn/dynamic_core.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
     OUT("#include \"ccn/ccn_dbg.h\"\n");
+    OUT("#include <stdio.h>\n");
     OUT("\n");
     OUT_FIELD("struct ccn_node *parent = NULL");
     OUT("\n");

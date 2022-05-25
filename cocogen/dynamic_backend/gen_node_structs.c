@@ -33,6 +33,7 @@ node_st *DGNSast(node_st *node)
         OUT_FIELD("struct hist_item *next");
     }
     OUT_TYPEDEF_STRUCT_END("hist_item");
+
     TRAVchildren(node);
     return node;
 }

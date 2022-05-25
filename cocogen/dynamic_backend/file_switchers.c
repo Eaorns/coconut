@@ -18,6 +18,7 @@ node_st *dynamic_start_ast_header(node_st *root)
     OUT("#pragma once\n");
     OUT("#include \"ccn/ccn_types.h\"\n");
     OUT("#include \"ccngen/enum.h\"\n");
+    OUT("#include <stddef.h>\n");
     OUT("typedef struct ccn_node %s;\n", "node_st");
 
     return root;
@@ -40,6 +41,7 @@ node_st *dynamicSwitchToAstSource(node_st *root)
     OUT("#include \"palm/memory.h\"\n");
     OUT("#include \"palm/watchpoint.h\"\n");
     OUT("#include \"palm/watchpointalloc.h\"\n");
+    OUT("#include \"ccn/phase_driver.h\"\n");
 
     return root;
 }

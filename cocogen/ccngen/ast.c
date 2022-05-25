@@ -10,7 +10,11 @@
 #include "palm/memory.h"
 #include "palm/watchpoint.h"
 #include "palm/watchpointalloc.h"
-int node_id_ctr = 0;
+#include "ccn/phase_driver.h"
+#define NODE_LIST_REALLOC_AMT 256
+size_t node_id_ctr = 0;
+node_st **node_tracker_list = NULL;
+size_t node_tracker_list_size = 0;
 node_st *NewNode() {
     node_st *node = MEMmalloc(sizeof(node_st));
     NODE_HIST(node) = MEMmalloc(sizeof(ccn_hist));
@@ -22,9 +26,25 @@ node_st *NewNode() {
     NODE_ELINE(node) = 0;
     NODE_BCOL(node) = 0;
     NODE_ECOL(node) = 0;
-    NODE_ID(node) = node_id_ctr++;
+    NODE_ID(node) = node_id_ctr;
     NODE_PARENT(node) = NULL;
+    NODE_ALLOCED_IN(node) = CCNgetCurrentActionId();
+    if (node_tracker_list_size == node_id_ctr) {
+        node_tracker_list_size += NODE_LIST_REALLOC_AMT;
+        node_tracker_list = realloc(node_tracker_list, node_tracker_list_size * sizeof(node_st*));
+    }
+    node_tracker_list[node_id_ctr++] = node;
     return node;
+}
+
+size_t get_node_id_counter()
+{
+    return node_id_ctr;
+}
+
+node_st **get_node_tracker_list()
+{
+    return node_tracker_list;
 }
 
 void wphandler(void *addr, void *old_val __attribute__((unused)), void *ucontext, void *userdata) {

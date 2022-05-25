@@ -6,6 +6,7 @@
 
 #include "ccngen/ast.h"
 #include "ccngen/debugger_helper.h"
+#include "ccn/dynamic_core.h"
 #include "ccn/ccn_dbg.h"
 #include "palm/str.h"
 #include "palm/watchpoint.h"
@@ -48,30 +49,68 @@ argument args_goto[] = {{"child",  "Move to a given child (by name or index)", N
 
 command commands[] = {{"tree",  "t", comm_tree,  "Interact with the tree", args_tree},
                       {"view",  "v", comm_view,  "Display a node and its history", args_view},
-                      {"goto",  "m", comm_goto,  "Go to another node", args_goto},
+                      {"goto",  "g", comm_goto,  "Go to another node", args_goto},
                       {"quit",  "q", comm_quit,  "Exit debug view", NULL},
                       {"help",  "h", comm_help,  "Display possible commands", NULL},
                       {(char*)NULL, NULL, (comm_func_t*)NULL, (char*)NULL, NULL}};
 
-struct ccn_node *curr_node;
-void cocodbg_start(struct ccn_node *start_node)
+node_st *curr_node;
+void cocodbg_start(node_st *start_node)
 {
     ccndbg_repl_commands = commands;
     curr_node = start_node;
-    // watchpoint_disable_all();
+    watchpoint_disable_all();
     cocodbg_repl();
-    // watchpoint_enable_all();
+    watchpoint_enable_all();
 }
 
 
 bool isnumber(char *str)
 {
+    if (str[0] == '\0')
+        return false;
+
     while (str[0]) {
         if (!isdigit(str[0]))
             return false;
         str++;
     }
     return true;
+}
+
+bool ishex(char *str)
+{
+    if (str[0] != '0' || str[1] != 'x')
+        return false;
+    str += 2;
+
+    if (str[0] == '\0')
+        return false;
+
+    while (str[0]) {
+        if (!isxdigit(str[0]))
+            return false;
+        str++;
+    }
+    return true;
+}
+
+
+node_st *find_node_by_id(size_t id)
+{
+    if (get_node_id_counter() <= id)
+        return NULL;
+    return get_node_tracker_list()[id];
+}
+
+bool node_exists(node_st *ptr)
+{
+    node_st **node_tracker_list = get_node_tracker_list();
+    for (size_t i = 0; i < get_node_id_counter(); i++) {
+        if (node_tracker_list[i] == ptr)
+            return true;
+    }
+    return false;
 }
 
 
@@ -94,8 +133,8 @@ void print_val(enum H_DATTYPES type, void *data)
                 printf(ANSI_COLOR_BBLUE"(nil)"ANSI_COLOR_RESET"("ANSI_COLOR_YELLOW"-1"ANSI_COLOR_RESET", "ANSI_COLOR_CYAN"%p"ANSI_COLOR_RESET")", data);
             }
             else {
-                printf(ANSI_COLOR_BBLUE"%s"ANSI_COLOR_RESET"("ANSI_COLOR_YELLOW"%i"ANSI_COLOR_RESET", "ANSI_COLOR_CYAN"%p"ANSI_COLOR_RESET")", 
-                       DBGHelper_nodename(NODE_TYPE(*(node_st**)data)), NODE_ID(*(node_st**)data), data);
+                printf(ANSI_COLOR_BBLUE"%s"ANSI_COLOR_RESET"("ANSI_COLOR_YELLOW"%li"ANSI_COLOR_RESET", "ANSI_COLOR_CYAN"%p"ANSI_COLOR_RESET")", 
+                       DBGHelper_nodename(NODE_TYPE(*(node_st**)data)), NODE_ID(*(node_st**)data), (void*)*(node_st**)data);
                 if (NODE_TRASHED(*(node_st**)data))
                     printf(ANSI_COLOR_RED" (trashed)"ANSI_COLOR_RESET);
             }
@@ -220,7 +259,7 @@ int comm_tree(char *comm)
 
 int comm_view(char *comm __attribute__((unused)))
 {
-    printf("  node %s (index %i, addr %p)\n", 
+    printf("  node %s (index %li, addr %p)\n", 
            DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
     char *valname = DBGHelper_iton(NODE_TYPE(curr_node), 0);
     ccn_hist *hist = NODE_HIST(curr_node);
@@ -265,19 +304,35 @@ int comm_goto(char *comm)
                 break;
             }
             curr_node = new_node;
-            printf("\nMoved to child %i (node %s (index %i, addr %p))\n\n", 
+            printf("\nMoved to child %i (node %s (index %li, addr %p))\n\n", 
                    idx, DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
             break;
         case 1:
             if (NODE_PARENT(curr_node)) {
                 curr_node = NODE_PARENT(curr_node);
-                printf("\nMoved to parent (node %s (index %i, addr %p))\n\n", 
+                printf("\nMoved to parent (node %s (index %li, addr %p))\n\n", 
                        DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
             }
             else
                 printf("Current node has no parent!\n");
             break;
         default:
+            if (isnumber(token)) {
+                idx = atoi(token);
+                new_node = find_node_by_id(idx);
+            } else if (ishex(token)) {
+                new_node = (node_st*)strtol(token + 2, NULL, 16);
+                if (!node_exists(new_node)) {
+                    printf("The given address does not contain a node!\n");
+                    break;
+                }
+            } else {
+                printf("Please specify a node by id or address, or give a subargument like 'parent' or 'child'\n");
+                break;
+            }
+            curr_node = new_node;
+            printf("\nMoved to %s (node %s (index %li, addr %p))\n\n", 
+                   token, DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
             break;  
     }
     fflush(stdout);

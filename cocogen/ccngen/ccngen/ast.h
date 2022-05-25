@@ -2,6 +2,7 @@
 #pragma once
 #include "ccn/ccn_types.h"
 #include "ccngen/enum.h"
+#include <stddef.h>
 typedef struct ccn_node node_st;
 enum H_DATTYPES {
     HDT_NULL,
@@ -756,6 +757,9 @@ union NODE_DATA {
     struct NODE_DATA_ID *N_id;
 };
 
+size_t get_node_id_counter();
+node_st **get_node_tracker_list();
+
 #define HIST_TRAVERSAL(n) ((n)->trav)
 #define HIST_NEXT(n) ((n)->next)
 typedef struct ccn_hist {
@@ -776,6 +780,7 @@ typedef struct ccn_hist {
 #define NODE_HIST(n) ((n)->hist)
 #define NODE_PARENT(n) ((n)->parent)
 #define NODE_TRASHED(n) ((n)->trashed)
+#define NODE_ALLOCED_IN(n) ((n)->alloc_action_id)
 typedef struct ccn_node {
     enum ccn_nodetype nodetype;
     union NODE_DATA data;
@@ -788,8 +793,9 @@ typedef struct ccn_node {
     uint32_t begin_col;
     uint32_t end_col;
     // Used by debugger
-    int id;
+    size_t id;
     struct ccn_node *parent;
     bool trashed;
+    size_t alloc_action_id;
 } ccn_node;
 
