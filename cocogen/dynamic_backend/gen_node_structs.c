@@ -30,6 +30,7 @@ node_st *DGNSast(node_st *node)
     {
         OUT_FIELD("void *val");
         OUT_FIELD("void *rip");
+        OUT_FIELD("size_t action");
         OUT_FIELD("struct hist_item *next");
     }
     OUT_TYPEDEF_STRUCT_END("hist_item");

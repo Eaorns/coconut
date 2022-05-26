@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <err.h>
 #include <palm/str.h>
+#include <palm/memory.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -16,10 +17,14 @@
 #include "ccn/phase_driver.h"
 #include "ccn/ccn_dbg.h"
 
+#define ACTION_HIST_REALLOC_AMT 256
 
 struct phase_driver {
     size_t level;
     size_t action_id;
+    size_t action_ctr;
+    enum ccn_action_id *action_hist;
+    size_t action_hist_size;
     size_t cycle_iter;
     size_t max_cycles;
     size_t breakpoint_id;
@@ -35,6 +40,9 @@ struct phase_driver {
 static struct phase_driver phase_driver = {
     .level = 0,
     .action_id = 0,
+    .action_ctr = 0,
+    .action_hist = NULL,
+    .action_hist_size = 0,
     .cycle_iter = 0,
     .breakpoint_id = 0,
     .max_cycles = 100,
@@ -51,6 +59,9 @@ static void resetPhaseDriver()
 {
     phase_driver.level = 0;
     phase_driver.action_id = 0;
+    phase_driver.action_ctr = 0;
+    phase_driver.action_hist = MEMfree(phase_driver.action_hist);
+    phase_driver.action_hist_size = 0;
     phase_driver.cycle_iter = 0;
     phase_driver.current_phase = NULL;
     phase_driver.fixed_point = false;
@@ -65,6 +76,12 @@ extern void BreakpointHandler(node_st *node);
 struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype root_type, struct ccn_node *node,
                           bool is_root) {
     phase_driver.action_id++;
+    if (phase_driver.action_hist_size <= ++phase_driver.action_ctr) {
+        phase_driver.action_hist_size += ACTION_HIST_REALLOC_AMT;
+        phase_driver.action_hist = realloc(phase_driver.action_hist, phase_driver.action_hist_size * sizeof(enum ccn_action_id));  // TODO replace with memory.h function
+    }
+    phase_driver.action_hist[phase_driver.action_ctr] = action->action_id;
+
     // Needed to break after a phase with action ids.
     size_t start_id = phase_driver.action_id;
 
@@ -304,11 +321,22 @@ void CCNrun(struct ccn_node *node)
     watchpoint_fini();
     TRAVstart(node, TRAV_free);
     wpalloc_fini();
+    MEMfree(phase_driver.action_hist);
 }
 
 size_t CCNgetCurrentActionId()
 {
     return phase_driver.action_id;
+}
+
+size_t CCNgetCurrentActionCtr()
+{
+    return phase_driver.action_ctr;
+}
+
+enum ccn_action_id *CCNgetActionHist()
+{
+    return phase_driver.action_hist;
 }
 
 static

@@ -26,10 +26,14 @@ static void *MapChildrenSource(void *key, void *ids)
     node_st *curr= (node_st*)ids;
     char *key_upr = STRupper((char*)key);
     OUT_START_FUNC("node_st *TRAV%s(node_st *node)", (char*)key);
+    OUT_FIELD("node_st *res");
     OUT_BEGIN_SWITCH("NODE_TYPE(node)");
     while (curr) {
         OUT_BEGIN_CASE("NT_%s", ID_UPR(curr));
-        OUT_FIELD("%s_%s(node) = TRAVopt(%s_%s(node))", ID_UPR(curr), key_upr, ID_UPR(curr), key_upr);
+        OUT_FIELD("res = TRAVopt(%s_%s(node))", ID_UPR(curr), key_upr);
+        OUT_BEGIN_IF("%s_%s(node) != res", ID_UPR(curr), key_upr);
+        OUT_FIELD("%s_%s(node) = res", ID_UPR(curr), key_upr);
+        OUT_END_IF();
         OUT_FIELD("break");
         OUT_END_CASE();
         curr = ID_NEXT(curr);

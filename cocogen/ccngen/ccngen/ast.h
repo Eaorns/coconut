@@ -28,6 +28,7 @@ enum H_DATTYPES {
 typedef struct hist_item {
     void *val;
     void *rip;
+    size_t action;
     struct hist_item *next;
 } hist_item;
 
@@ -759,13 +760,8 @@ union NODE_DATA {
 
 size_t get_node_id_counter();
 node_st **get_node_tracker_list();
-
-#define HIST_TRAVERSAL(n) ((n)->trav)
-#define HIST_NEXT(n) ((n)->next)
 typedef struct ccn_hist {
     union HIST_DATA data;
-    enum ccn_traversal_type trav;
-    struct ccn_hist *next;
 } ccn_hist;
 
 #define NODE_TYPE(n) ((n)->nodetype)

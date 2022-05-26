@@ -26,6 +26,7 @@ node_st *DGNCast(node_st *node)
         OUT_FIELD("struct hist_item *s = (struct hist_item *)malloc(sizeof(struct hist_item))");
         OUT_FIELD("s->val = (void*)(*(long*)addr)");
         OUT_FIELD("s->rip = rip");
+        OUT_FIELD("s->action = CCNgetCurrentActionCtr()");
         OUT_FIELD("s->next = *(void**)userdata");
         OUT_FIELD("*(void**)userdata = s");
     }

@@ -74,12 +74,8 @@ node_st *dynamicGenBaseNode(node_st *root)
 
     OUT_FIELD("%s **get_node_tracker_list()", basic_node_type);
 
-    OUT("#define HIST_TRAVERSAL(n) ((n)->trav)\n");
-    OUT("#define HIST_NEXT(n) ((n)->next)\n");
     OUT_TYPEDEF_STRUCT("ccn_hist");
     OUT_FIELD("union HIST_DATA data");
-    OUT_FIELD("enum ccn_traversal_type trav");
-    OUT_FIELD("struct ccn_hist *next");
     OUT_TYPEDEF_STRUCT_END("ccn_hist");
 
     OUT("#define NODE_TYPE(n) ((n)->nodetype)\n");

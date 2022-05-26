@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "ccngen/ast.h"
+#include "ccn/action_types.h"
 
 enum pd_verbosity {
     PD_V_QUIET = 0,
@@ -14,6 +15,8 @@ enum pd_verbosity {
 void CCNrun(node_st *node);
 void CCNcycleNotify();
 size_t CCNgetCurrentActionId();
+size_t CCNgetCurrentActionCtr();
+enum ccn_action_id *CCNgetActionHist();
 void CCNerrorPhase();
 void CCNerrorAction();
 void CCNsetBreakpoint(char *breakpoint);

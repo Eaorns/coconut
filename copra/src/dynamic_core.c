@@ -1,6 +1,7 @@
 #include "ccn/dynamic_core.h"
 #include "ccn/ccn_types.h"
 #include "ccn/ccn_dbg.h"
+#include "palm/watchpoint.h"
 #include <err.h>
 #include <stdio.h>
 
@@ -80,7 +81,10 @@ struct ccn_node *TRAVnop(struct ccn_node *arg_node) { return arg_node; }
  */
 struct ccn_node *TRAVchildren(struct ccn_node *arg_node) {
     for (int i = 0; i < NODE_NUMCHILDREN(arg_node); i++) {
-        NODE_CHILDREN(arg_node)[i] = TRAVopt(NODE_CHILDREN(arg_node)[i]);
+        // check if child has changed, if not do not register to history
+        struct ccn_node *res = TRAVopt(NODE_CHILDREN(arg_node)[i]);
+        if (res != NODE_CHILDREN(arg_node)[i])
+            NODE_CHILDREN(arg_node)[i] = res;
     }
     return arg_node;
 }
@@ -117,7 +121,9 @@ struct ccn_node *CCNfree(struct ccn_node *arg_node) { return TRAVstart(arg_node,
  */
 struct ccn_node *CCNdebug(struct ccn_node *arg_node)
 {
+    watchpoint_disable_all();
     TRAVstart(arg_node, TRAV_dbg);
     cocodbg_start(arg_node);
+    watchpoint_enable_all();
     return arg_node;
 }

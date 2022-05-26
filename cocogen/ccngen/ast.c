@@ -13,7 +13,7 @@
 #include "ccn/phase_driver.h"
 #define NODE_LIST_REALLOC_AMT 256
 size_t node_id_ctr = 0;
-node_st **node_tracker_list = NULL;
+node_st **node_tracker_list;
 size_t node_tracker_list_size = 0;
 node_st *NewNode() {
     node_st *node = MEMmalloc(sizeof(node_st));
@@ -33,17 +33,16 @@ node_st *NewNode() {
         node_tracker_list_size += NODE_LIST_REALLOC_AMT;
         node_tracker_list = realloc(node_tracker_list, node_tracker_list_size * sizeof(node_st*));
     }
+
     node_tracker_list[node_id_ctr++] = node;
     return node;
 }
 
-size_t get_node_id_counter()
-{
+size_t get_node_id_counter() {
     return node_id_ctr;
 }
 
-node_st **get_node_tracker_list()
-{
+node_st **get_node_tracker_list() {
     return node_tracker_list;
 }
 
@@ -53,6 +52,7 @@ void wphandler(void *addr, void *old_val __attribute__((unused)), void *ucontext
     struct hist_item *s = (struct hist_item *)malloc(sizeof(struct hist_item));
     s->val = (void*)(*(long*)addr);
     s->rip = rip;
+    s->action = CCNgetCurrentActionCtr();
     s->next = *(void**)userdata;
     *(void**)userdata = s;
 }

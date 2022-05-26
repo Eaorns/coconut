@@ -1,14 +1,19 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <execinfo.h>
 #include <string.h>
 #include <ctype.h>
+#include <dlfcn.h>
 
 #include "ccngen/ast.h"
 #include "ccngen/debugger_helper.h"
 #include "ccn/dynamic_core.h"
+#include "ccn/phase_driver.h"
+#include "ccn/action_types.h"
 #include "ccn/ccn_dbg.h"
 #include "palm/str.h"
+#include "palm/memory.h"
 #include "palm/watchpoint.h"
 
 #define ANSI_COLOR_RED      "\x1b[31m"
@@ -59,9 +64,8 @@ void cocodbg_start(node_st *start_node)
 {
     ccndbg_repl_commands = commands;
     curr_node = start_node;
-    watchpoint_disable_all();
+    // Assumes watchpoints have already been disabled and will re re-enabled by caller.
     cocodbg_repl();
-    watchpoint_enable_all();
 }
 
 
@@ -191,42 +195,56 @@ void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
 {
     bool skipping = false;
     int j;
-    hist_item *hitem_prev;
+    hist_item *hitem_prev = NULL;
+    Dl_info *func_info = MEMmalloc(sizeof(Dl_info));
 
     for (j = 0; hitem; j++) {
         // 'May be uninitialized'-bug in GCC!
-        if (hitem_prev && hitem->val == hitem_prev->val && hitem->rip == hitem_prev->rip) {
-            if (!skipping) {
-                printf("   ...\n");
-                skipping = true;
+        if (hitem_prev && hitem->val == hitem_prev->val && hitem->rip == hitem_prev->rip && hitem->action == hitem_prev->action) {
+            if (!(!skipping && hitem->next && (hitem->val != hitem->next->val || hitem->rip != hitem->next->rip || hitem->action != hitem->next->action))) {
+                if (!skipping) {
+                    printf("   ...\n");
+                    skipping = true;
+                }
+                hitem_prev = hitem;
+                hitem = hitem->next;
+                continue;
             }
-            hitem_prev = hitem;
-            hitem = hitem->next;
-            continue;
         }
         if (skipping) {
             printf("   #%i ", j-1);
             print_val(dattype, &(hitem_prev->val));
-            char **funcname = backtrace_symbols(&(hitem_prev->rip), 1);
-            printf(" at %s\n", funcname[0]);
-            free(funcname);
+            // char **funcname = backtrace_symbols(&(hitem_prev->rip), 1);
+            // printf(" at %s", funcname[0]);
+            // free(funcname);
+            dladdr(hitem_prev->rip, func_info);
+            printf(" at %s %p", func_info->dli_sname, hitem_prev->rip);
+            printf(" (action %lu: %s)\n", hitem_prev->action, CCNgetActionFromID(CCNgetActionHist()[hitem_prev->action])->name);
             skipping = false;
         }
         printf("   #%i ", j);
         print_val(dattype, &(hitem->val));
-        char **funcname = backtrace_symbols(&(hitem->rip), 1);
-        printf(" at %s\n", funcname[0]);
-        free(funcname);
+        // char **funcname = backtrace_symbols(&(hitem->rip), 1);
+        // printf(" at %s", funcname[0]);
+        // free(funcname);
+        dladdr(hitem->rip, func_info);
+        printf(" at %s %p", func_info->dli_sname, hitem->rip);
+        printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
         hitem_prev = hitem;
         hitem = hitem->next;
     }
     if (skipping) {
         printf("   #%i ", j-1);
         print_val(dattype, &(hitem_prev->val));
-        char **funcname = backtrace_symbols(&(hitem_prev->rip), 1);
-        printf(" at %s\n", funcname[0]);
-        free(funcname);
+        // char **funcname = backtrace_symbols(&(hitem_prev->rip), 1);
+        // printf(" at %s", funcname[0]);
+        // free(funcname);
+        dladdr(hitem_prev->rip, func_info);
+        printf(" at %s %p", func_info->dli_sname, hitem_prev->rip);
+        printf(" (action %lu: %s)\n", hitem_prev->action, CCNgetActionFromID(CCNgetActionHist()[hitem_prev->action])->name);
     }
+
+    MEMfree(func_info);
 }
 
 
