@@ -1,10 +1,10 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
-#include <execinfo.h>
 #include <string.h>
 #include <ctype.h>
 #include <dlfcn.h>
+#include <unistd.h>
 
 #include "ccngen/ast.h"
 #include "ccngen/debugger_helper.h"
@@ -25,6 +25,10 @@
 #define ANSI_COLOR_BMAGENTA "\x1b[95m"
 #define ANSI_COLOR_CYAN     "\x1b[36m"
 #define ANSI_COLOR_RESET    "\x1b[0m"
+
+char *executable_name = NULL;
+bool current_path_initialized = false;
+char current_path[256];
 
 /**
  *  Declare command functions
@@ -62,6 +66,10 @@ command commands[] = {{"tree",  "t", comm_tree,  "Interact with the tree", args_
 node_st *curr_node;
 void cocodbg_start(node_st *start_node)
 {
+    if (!current_path_initialized) {
+        getcwd(current_path, 255);
+        current_path_initialized = true;
+    }
     ccndbg_repl_commands = commands;
     curr_node = start_node;
     // Assumes watchpoints have already been disabled and will re re-enabled by caller.
@@ -99,6 +107,13 @@ bool ishex(char *str)
     return true;
 }
 
+char *strip_path(char *path)
+{
+    if (STReqn(current_path, path, STRlen(current_path)))
+        return path + STRlen(current_path);
+    return path;
+}
+
 
 node_st *find_node_by_id(size_t id)
 {
@@ -115,6 +130,23 @@ bool node_exists(node_st *ptr)
             return true;
     }
     return false;
+}
+
+char *run_addr2line(void *addr)
+{
+    char command[128];
+    snprintf(command, 128, "addr2line -e %s %p", executable_name, addr);
+    FILE *out = popen(command, "r");
+    char *output = MEMmalloc(256);
+    char c = fgetc(out);
+    int i;
+    for (i = 0; i < 255 && c != '\r' && c != '\n' && c != EOF; i++) {
+        output[i] = c;
+        c = fgetc(out);
+    }
+    output[i] = '\0';
+    pclose(out);
+    return output;
 }
 
 
@@ -214,21 +246,15 @@ void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
         if (skipping) {
             printf("   #%i ", j-1);
             print_val(dattype, &(hitem_prev->val));
-            // char **funcname = backtrace_symbols(&(hitem_prev->rip), 1);
-            // printf(" at %s", funcname[0]);
-            // free(funcname);
             dladdr(hitem_prev->rip, func_info);
-            printf(" at %s %p", func_info->dli_sname, hitem_prev->rip);
+            printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)(hitem_prev->rip - func_info->dli_fbase))));
             printf(" (action %lu: %s)\n", hitem_prev->action, CCNgetActionFromID(CCNgetActionHist()[hitem_prev->action])->name);
             skipping = false;
         }
         printf("   #%i ", j);
         print_val(dattype, &(hitem->val));
-        // char **funcname = backtrace_symbols(&(hitem->rip), 1);
-        // printf(" at %s", funcname[0]);
-        // free(funcname);
         dladdr(hitem->rip, func_info);
-        printf(" at %s %p", func_info->dli_sname, hitem->rip);
+        printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)(hitem->rip - func_info->dli_fbase))));
         printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
         hitem_prev = hitem;
         hitem = hitem->next;
@@ -236,17 +262,13 @@ void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
     if (skipping) {
         printf("   #%i ", j-1);
         print_val(dattype, &(hitem_prev->val));
-        // char **funcname = backtrace_symbols(&(hitem_prev->rip), 1);
-        // printf(" at %s", funcname[0]);
-        // free(funcname);
         dladdr(hitem_prev->rip, func_info);
-        printf(" at %s %p", func_info->dli_sname, hitem_prev->rip);
+        printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)(hitem_prev->rip - func_info->dli_fbase))));
         printf(" (action %lu: %s)\n", hitem_prev->action, CCNgetActionFromID(CCNgetActionHist()[hitem_prev->action])->name);
     }
 
     MEMfree(func_info);
 }
-
 
 /**
  *  Define command functions

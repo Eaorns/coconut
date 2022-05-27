@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include "ccngen/action_handling.h"
 #include "ccn/action_types.h"
+#include "ccn/ccn_dbg.h"
 
 struct globals globals;
 
@@ -44,6 +45,7 @@ int main(int argc, char *argv[])
     if (!global_command_line.debug) {
         DBUGoff();
     }
+    executable_name = argv[0];
 
     globals.filename = global_command_line.input_file;
     globals.line_map = HTnew_Int(25);

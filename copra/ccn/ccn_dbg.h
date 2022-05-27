@@ -26,3 +26,5 @@ int parse_arg(argument args[], char *arg);
 
 extern int ccndbg_repl_done;
 extern command *ccndbg_repl_commands;
+
+extern char *executable_name;
