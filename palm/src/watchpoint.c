@@ -2,7 +2,6 @@
 #include "palm/watchpoint.h"
 
 #include <unistd.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -64,6 +63,7 @@ wp_page **page_table;
 wp_addr **wp_table;
 void *curr_segv_addr;
 void *prev_val;
+struct sigaction *default_sighandler = NULL;
 
 /**
  * Retrieve a wp_page entry from the page table,
@@ -222,9 +222,14 @@ void watchpoint_sigsegv(int signo, siginfo_t *info, void *vcontext)
         WP_DEBUG("[watchpoint handler] Non-intentional SIGSEGV! Restoring default handler...\n");
 
         /* Restore default sighandler */
-        struct sigaction actsegv = { 0 };
-        actsegv.sa_handler = SIG_DFL;
-        sigaction(SIGSEGV, &actsegv, NULL);
+        if (default_sighandler != NULL) {
+            sigaction(SIGSEGV, default_sighandler, NULL);
+        } else {
+            struct sigaction actsegv = { 0 };
+            actsegv.sa_handler = SIG_DFL;
+            sigaction(SIGSEGV, &actsegv, NULL);
+        }
+        
 
         return;
     }
@@ -352,4 +357,17 @@ void watchpoint_enable_all()
             curr = curr->next;
         }
     }
+}
+
+void watchpoint_set_default_sigsegvhandler(struct sigaction *sighandler)
+{
+    default_sighandler = sighandler;
+}
+
+void watchpoint_restore_sighandler()
+{
+    struct sigaction actsegv = { 0 };
+    actsegv.sa_flags = SA_SIGINFO;
+    actsegv.sa_sigaction = &watchpoint_sigsegv;
+    sigaction(SIGSEGV, &actsegv, NULL);
 }

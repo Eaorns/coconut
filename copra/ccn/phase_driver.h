@@ -17,6 +17,7 @@ void CCNcycleNotify();
 size_t CCNgetCurrentActionId();
 size_t CCNgetCurrentActionCtr();
 enum ccn_action_id *CCNgetActionHist();
+struct ccn_node *CCNgetRootNode();
 void CCNerrorPhase();
 void CCNerrorAction();
 void CCNsetBreakpoint(char *breakpoint);

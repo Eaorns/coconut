@@ -122,7 +122,7 @@ struct ccn_node *CCNfree(struct ccn_node *arg_node) { return TRAVstart(arg_node,
 struct ccn_node *CCNdebug(struct ccn_node *arg_node)
 {
     watchpoint_disable_all();
-    TRAVstart(arg_node, TRAV_dbg);
+    TRAVstart(CCNgetRootNode(), TRAV_dbg);
     cocodbg_start(arg_node);
     watchpoint_enable_all();
     return arg_node;

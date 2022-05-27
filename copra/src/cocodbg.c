@@ -67,7 +67,7 @@ node_st *curr_node;
 void cocodbg_start(node_st *start_node)
 {
     if (!current_path_initialized) {
-        getcwd(current_path, 255);
+        (void)!getcwd(current_path, 255);
         current_path_initialized = true;
     }
     ccndbg_repl_commands = commands;
@@ -223,6 +223,16 @@ void print_val(enum H_DATTYPES type, void *data)
     }
 }
 
+void print_hist_line(int i, hist_item *hitem, enum H_DATTYPES dattype, Dl_info *func_info)
+{
+    printf("   #%i ", i);
+    print_val(dattype, &(hitem->val));
+    dladdr(hitem->rip, func_info);
+    printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)((char*)hitem->rip - (char*)func_info->dli_fbase))));
+    printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
+            
+}
+
 void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
 {
     bool skipping = false;
@@ -244,27 +254,14 @@ void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
             }
         }
         if (skipping) {
-            printf("   #%i ", j-1);
-            print_val(dattype, &(hitem_prev->val));
-            dladdr(hitem_prev->rip, func_info);
-            printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)(hitem_prev->rip - func_info->dli_fbase))));
-            printf(" (action %lu: %s)\n", hitem_prev->action, CCNgetActionFromID(CCNgetActionHist()[hitem_prev->action])->name);
+            print_hist_line(j-1, hitem_prev, dattype, func_info);
             skipping = false;
         }
-        printf("   #%i ", j);
-        print_val(dattype, &(hitem->val));
-        dladdr(hitem->rip, func_info);
-        printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)(hitem->rip - func_info->dli_fbase))));
-        printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
-        hitem_prev = hitem;
+        print_hist_line(j, hitem, dattype, func_info);
         hitem = hitem->next;
     }
     if (skipping) {
-        printf("   #%i ", j-1);
-        print_val(dattype, &(hitem_prev->val));
-        dladdr(hitem_prev->rip, func_info);
-        printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)(hitem_prev->rip - func_info->dli_fbase))));
-        printf(" (action %lu: %s)\n", hitem_prev->action, CCNgetActionFromID(CCNgetActionHist()[hitem_prev->action])->name);
+        print_hist_line(j-1, hitem_prev, dattype, func_info);
     }
 
     MEMfree(func_info);

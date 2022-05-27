@@ -7,24 +7,35 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <setjmp.h>
 
 #include "ccn/action_types.h"
 #include "ccn/dynamic_core.h"
 #include "ccngen/action_handling.h"
+#include "ccngen/debugger_helper.h"
 #include "palm/ctinfo.h"
 #include "palm/watchpoint.h"
 #include "palm/watchpointalloc.h"
 #include "ccn/phase_driver.h"
 #include "ccn/ccn_dbg.h"
 
-#define ACTION_HIST_REALLOC_AMT 256
+#define ACTION_HIST_REALLOC_AMT 128
 
 struct phase_driver {
     size_t level;
     size_t action_id;
+    // Begin used by debugger
     size_t action_ctr;
     enum ccn_action_id *action_hist;
+    jmp_buf *action_hist_jmps;
     size_t action_hist_size;
+    jmp_buf *curr_jmp;
+    struct ccn_node *root_node;
+    struct ccn_node *err_node;
+    ucontext_t *crash_context;
+    bool segfaulting;
+    // End used by debugger
     size_t cycle_iter;
     size_t max_cycles;
     size_t breakpoint_id;
@@ -42,7 +53,10 @@ static struct phase_driver phase_driver = {
     .action_id = 0,
     .action_ctr = 0,
     .action_hist = NULL,
+    .action_hist_jmps = NULL,
     .action_hist_size = 0,
+    .segfaulting = false,
+    .crash_context = NULL,
     .cycle_iter = 0,
     .breakpoint_id = 0,
     .max_cycles = 100,
@@ -61,7 +75,9 @@ static void resetPhaseDriver()
     phase_driver.action_id = 0;
     phase_driver.action_ctr = 0;
     phase_driver.action_hist = MEMfree(phase_driver.action_hist);
+    phase_driver.action_hist_jmps = MEMfree(phase_driver.action_hist_jmps);
     phase_driver.action_hist_size = 0;
+    phase_driver.segfaulting = false;
     phase_driver.cycle_iter = 0;
     phase_driver.current_phase = NULL;
     phase_driver.fixed_point = false;
@@ -78,9 +94,23 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
     phase_driver.action_id++;
     if (phase_driver.action_hist_size <= ++phase_driver.action_ctr) {
         phase_driver.action_hist_size += ACTION_HIST_REALLOC_AMT;
-        phase_driver.action_hist = realloc(phase_driver.action_hist, phase_driver.action_hist_size * sizeof(enum ccn_action_id));  // TODO replace with memory.h function
+        // TODO replace realloc with memory.h function
+        phase_driver.action_hist = realloc(phase_driver.action_hist, phase_driver.action_hist_size * sizeof(enum ccn_action_id));  
+        phase_driver.action_hist_jmps = realloc(phase_driver.action_hist_jmps, phase_driver.action_hist_size * sizeof(jmp_buf));
     }
     phase_driver.action_hist[phase_driver.action_ctr] = action->action_id;
+    int setjmp_retc = setjmp(phase_driver.action_hist_jmps[phase_driver.action_ctr]);
+    if (setjmp_retc != 0)
+        fprintf(stderr, "Continuing %li from longjump!\n", phase_driver.action_ctr);
+    if (setjmp_retc == -1) {
+        // start debugger
+        if (phase_driver.err_node != NULL)
+            CCNdebug(phase_driver.err_node);
+        else
+            CCNdebug(phase_driver.root_node);
+    }
+
+    phase_driver.curr_jmp = &(phase_driver.action_hist_jmps[phase_driver.action_ctr]);
 
     // Needed to break after a phase with action ids.
     size_t start_id = phase_driver.action_id;
@@ -307,6 +337,39 @@ void CCNsetTreeCheck(bool enable)
     phase_driver.tree_check = enable;
 }
 
+void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void *vcontext)
+{
+    if (phase_driver.segfaulting) {
+        fprintf(stderr, "Non-recoverable segmentation fault! Exiting...");
+        struct sigaction actsegv = { 0 };
+        actsegv.sa_handler = SIG_DFL;
+        sigaction(SIGSEGV, &actsegv, NULL);
+        return;
+    }
+    
+    phase_driver.segfaulting = true;
+
+    phase_driver.crash_context = (ucontext_t*)vcontext;
+
+    // find problematic node, if present
+    phase_driver.err_node = NULL;
+    if (info->si_addr != NULL) {
+        node_st **node_tracker_list = get_node_tracker_list();
+        void *field_ptr;
+        bool done = false;
+        for (size_t i = 0; !done && i < get_node_id_counter(); i++) {
+            for (int j = 0; (field_ptr = DBGHelper_getptr(node_tracker_list[i], j)) != NULL; j++) {
+                if (field_ptr == info->si_addr) {
+                    phase_driver.err_node = node_tracker_list[i];
+                    done = true;
+                }
+            }
+        }
+    }
+
+    longjmp(*(phase_driver.curr_jmp), -1);
+}
+
 /**
  * Perform an invocation of your compiler.
  * @param node the root of the tree. Will call the free traversal at the end.
@@ -316,8 +379,19 @@ void CCNrun(struct ccn_node *node)
     resetPhaseDriver();
     watchpoint_init();
     wpalloc_init();
+
+    /* Register SIGSEGV handler */
+    struct sigaction actsegv = { 0 };
+    actsegv.sa_flags = SA_SIGINFO;
+    actsegv.sa_sigaction = &sighandler_sigsegv;
+    sigaction(SIGSEGV, &actsegv, NULL);
+
+    watchpoint_set_default_sigsegvhandler(&actsegv);
+
+    phase_driver.root_node = node;
     node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
     CCNdebug(node);
+    
     watchpoint_fini();
     TRAVstart(node, TRAV_free);
     wpalloc_fini();
@@ -337,6 +411,11 @@ size_t CCNgetCurrentActionCtr()
 enum ccn_action_id *CCNgetActionHist()
 {
     return phase_driver.action_hist;
+}
+
+struct ccn_node *CCNgetRootNode()
+{
+    return phase_driver.root_node;
 }
 
 static
