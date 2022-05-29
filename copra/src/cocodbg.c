@@ -34,46 +34,50 @@ char current_path[256];
  *  Declare command functions
  */
 
-int comm_tree(char*);
 int comm_view(char*);
 int comm_goto(char*);
 int comm_quit(char*);
+int comm_cont(char*);
 int comm_help(char*);
-
-argument args_tree_get[] = {{"first", "Get first", NULL},
-                            {"last",  "Get last",  NULL},
-                            {(char*)NULL, NULL, NULL}};
-
-argument args_tree[] = {{"get", "Get an element from the tree", args_tree_get},
-                        {"set", "Set an element in the tree",   NULL},
-                        {(char*)NULL, NULL, NULL}};
-
-argument args_view[] = {{"current", "Get an element from the tree", NULL},
-                        {"parent",  "Set an element in the tree",   NULL},
-                        {(char*)NULL, NULL, NULL}};
 
 argument args_goto[] = {{"child",  "Move to a given child (by name or index)", NULL},
                         {"parent", "Move to the parent",   NULL},
                         {(char*)NULL, NULL, NULL}};
 
-command commands[] = {{"tree",  "t", comm_tree,  "Interact with the tree", args_tree},
-                      {"view",  "v", comm_view,  "Display a node and its history", args_view},
-                      {"goto",  "g", comm_goto,  "Go to another node", args_goto},
-                      {"quit",  "q", comm_quit,  "Exit debug view", NULL},
-                      {"help",  "h", comm_help,  "Display possible commands", NULL},
+command commands[] = {{"view",     "v", comm_view,  "Display a node and its history", NULL},
+                      {"goto",     "g", comm_goto,  "Move to another node", args_goto},
+                      {"quit",     "q", comm_quit,  "Exit debugger and exit program", NULL},
+                      {"continue", "c", comm_cont,  "Exit debugger and continue execution", NULL},
+                      {"help",     "h", comm_help,  "Display possible commands", NULL},
                       {(char*)NULL, NULL, (comm_func_t*)NULL, (char*)NULL, NULL}};
 
+bool node_exists(node_st *ptr);
+char *run_addr2line(void *addr);
+char *strip_path(char *path);
+
 node_st *curr_node;
-void cocodbg_start(node_st *start_node)
+int cocodbg_start(node_st *start_node)
 {
     if (!current_path_initialized) {
         (void)!getcwd(current_path, 255);
         current_path_initialized = true;
     }
     ccndbg_repl_commands = commands;
-    curr_node = start_node;
+    if (curr_node != NULL && start_node != CCNgetRootNode() && !node_exists(start_node))
+        curr_node = CCNgetRootNode();
+    else
+        curr_node = start_node;
+    
+    if (CCNisSegfaulting()) {
+        Dl_info func_info = { 0 };
+        void *rip = (void*)(CCNgetCrashContext()->uc_mcontext.gregs[REG_RIP]);
+        dladdr(rip, &func_info);
+        printf("\nSegfault generated at %s\n\n", 
+               strip_path(run_addr2line((void*)((char*)rip - (char*)func_info.dli_fbase))));
+    }
+
     // Assumes watchpoints have already been disabled and will re re-enabled by caller.
-    cocodbg_repl();
+    return cocodbg_repl();
 }
 
 
@@ -109,11 +113,17 @@ bool ishex(char *str)
 
 char *strip_path(char *path)
 {
-    if (STReqn(current_path, path, STRlen(current_path)))
-        return path + STRlen(current_path);
+    size_t len = STRlen(current_path);
+    if (len > 1 && STReqn(current_path, path, len)) {
+        path += len - 1;
+        if (path[1] != '/') {
+            path--;
+            path[1] = '/';
+        }
+        path[0] = '.';
+    }
     return path;
 }
-
 
 node_st *find_node_by_id(size_t id)
 {
@@ -124,6 +134,8 @@ node_st *find_node_by_id(size_t id)
 
 bool node_exists(node_st *ptr)
 {
+    if (ptr == NULL)
+        return false;
     node_st **node_tracker_list = get_node_tracker_list();
     for (size_t i = 0; i < get_node_id_counter(); i++) {
         if (node_tracker_list[i] == ptr)
@@ -223,12 +235,13 @@ void print_val(enum H_DATTYPES type, void *data)
     }
 }
 
-void print_hist_line(int i, hist_item *hitem, enum H_DATTYPES dattype, Dl_info *func_info)
+void print_hist_line(int i, hist_item *hitem, enum H_DATTYPES dattype)
 {
+    Dl_info func_info = { 0 };
     printf("   #%i ", i);
     print_val(dattype, &(hitem->val));
-    dladdr(hitem->rip, func_info);
-    printf(", %s() at %s", func_info->dli_sname, strip_path(run_addr2line((void*)((char*)hitem->rip - (char*)func_info->dli_fbase))));
+    dladdr(hitem->rip, &func_info);
+    printf(", %s() at %s", func_info.dli_sname, strip_path(run_addr2line((void*)((char*)hitem->rip - (char*)func_info.dli_fbase))));
     printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
             
 }
@@ -238,7 +251,6 @@ void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
     bool skipping = false;
     int j;
     hist_item *hitem_prev = NULL;
-    Dl_info *func_info = MEMmalloc(sizeof(Dl_info));
 
     for (j = 0; hitem; j++) {
         // 'May be uninitialized'-bug in GCC!
@@ -254,45 +266,20 @@ void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
             }
         }
         if (skipping) {
-            print_hist_line(j-1, hitem_prev, dattype, func_info);
+            print_hist_line(j-1, hitem_prev, dattype);
             skipping = false;
         }
-        print_hist_line(j, hitem, dattype, func_info);
+        print_hist_line(j, hitem, dattype);
         hitem = hitem->next;
     }
     if (skipping) {
-        print_hist_line(j-1, hitem_prev, dattype, func_info);
+        print_hist_line(j-1, hitem_prev, dattype);
     }
-
-    MEMfree(func_info);
 }
 
 /**
  *  Define command functions
  */
-
-int comm_tree(char *comm)
-{
-    char *token = strtok(comm, " ");
-    if (token == NULL) {
-        printf("'tree' requires additional arguments.\n");
-        return -1;
-    }
-
-    switch (parse_arg(args_tree, token)) {
-    case 0:
-        printf("Tree get '%s'\n", strtok(NULL, ""));
-        break;
-    case 1:
-        printf("Tree set '%s'\n", strtok(NULL, ""));
-        break;
-    default:
-        printf("Unknown argument '%s' for command 'tree'\n", token);
-        return -1;
-    }
-
-    return 0;
-}
 
 int comm_view(char *comm __attribute__((unused)))
 {
@@ -382,8 +369,23 @@ int comm_quit(char *comm __attribute__((unused)))
     return 0;
 }
 
+int comm_cont(char *comm __attribute__((unused)))
+{
+    ccndbg_repl_done = 2;
+    return 0;
+}
+
 int comm_help(char *comm __attribute__((unused)))
 {
-    printf("TODO: loop through commands and print their description.\n");
+    // TODO: also print arguments
+    for (int i = 0; commands[i].command != NULL; i++) {
+        printf("%s (%s): \t%s\n", commands[i].command, commands[i].alt, commands[i].desc);
+        if (commands[i].args != NULL) {
+            for (int j = 0; commands[i].args[j].arg != NULL; j++) {
+                printf("  - %s: \t  %s\n", commands[i].args[j].arg, commands[i].args[j].desc);
+            }
+        }
+    }
+    printf("\n");
     return 0;
 }

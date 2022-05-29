@@ -10,9 +10,6 @@
 
 extern int errno;
 
-// #define WP_DISABLE
-
-// #define DO_WP_DEBUG
 #ifdef DO_WP_DEBUG
 #define WP_DEBUG printf
 #else

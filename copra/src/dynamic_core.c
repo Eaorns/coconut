@@ -1,4 +1,6 @@
+#define _GNU_SOURCE
 #include "ccn/dynamic_core.h"
+#include "ccn/phase_driver.h"
 #include "ccn/ccn_types.h"
 #include "ccn/ccn_dbg.h"
 #include "palm/watchpoint.h"
@@ -123,7 +125,22 @@ struct ccn_node *CCNdebug(struct ccn_node *arg_node)
 {
     watchpoint_disable_all();
     TRAVstart(CCNgetRootNode(), TRAV_dbg);
-    cocodbg_start(arg_node);
+    int res = cocodbg_start(arg_node);
     watchpoint_enable_all();
+
+    switch (res) {
+        case 1:
+            // TODO cleanup before exit
+            exit(0);
+        case 2:
+            if (CCNisSegfaulting()) {
+                printf("%p %p\n", CCNgetCrashContext(), CCNgetCrashContext()->uc_mcontext.gregs[REG_RIP]);
+                CCNstopSegfaulting();
+                setcontext(CCNgetCrashContext());
+            }
+            break;
+        default:
+            break;
+    }
     return arg_node;
 }

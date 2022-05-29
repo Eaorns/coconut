@@ -18,7 +18,7 @@ typedef struct command {
     argument *args;
 } command;
 
-void cocodbg_start(struct ccn_node *start_node);
+int cocodbg_start(struct ccn_node *start_node);
 
 int cocodbg_repl();
 command *find_command(char *comm);

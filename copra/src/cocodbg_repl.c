@@ -128,6 +128,7 @@ int cocodbg_repl()
 
     char *line, *stripped, *token;
 
+    ccndbg_repl_done = 0;
     while (!ccndbg_repl_done) {
         line = readline(COCODBG_PROMPT);
         stripped = strip(line);

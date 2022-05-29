@@ -1,5 +1,8 @@
 #include <signal.h>
 
+#define WP_DISABLE
+// #define DO_WP_DEBUG
+
 int watchpoint_init();
 int watchpoint_fini();
 /* The handler function takes the address of the triggered

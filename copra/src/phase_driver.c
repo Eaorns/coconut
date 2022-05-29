@@ -6,9 +6,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <setjmp.h>
 
 #include "ccn/action_types.h"
 #include "ccn/dynamic_core.h"
@@ -27,14 +27,8 @@ struct phase_driver {
     size_t action_id;
     // Begin used by debugger
     size_t action_ctr;
-    enum ccn_action_id *action_hist;
-    jmp_buf *action_hist_jmps;
-    size_t action_hist_size;
-    jmp_buf *curr_jmp;
+    ucontext_t *curr_context;
     struct ccn_node *root_node;
-    struct ccn_node *err_node;
-    ucontext_t *crash_context;
-    bool segfaulting;
     // End used by debugger
     size_t cycle_iter;
     size_t max_cycles;
@@ -48,15 +42,33 @@ struct phase_driver {
     char *breakpoint;
 };
 
+struct debugger_data {
+    enum ccn_action_id *action_hist;
+    ucontext_t *context_hist;
+    struct phase_driver *phase_driver_hist;
+    size_t hist_size;
+
+    struct ccn_node *err_node;
+    ucontext_t crash_context;
+    bool segfaulting;
+    size_t restoring_context;
+};
+
+static struct debugger_data debugger_data = {
+    .action_hist = NULL,
+    .context_hist = NULL,
+    .phase_driver_hist = NULL,
+    .hist_size = 0,
+    .err_node = NULL,
+    .crash_context = { 0 },
+    .segfaulting = false,
+    .restoring_context = (size_t)-1
+};
+
 static struct phase_driver phase_driver = {
     .level = 0,
     .action_id = 0,
     .action_ctr = 0,
-    .action_hist = NULL,
-    .action_hist_jmps = NULL,
-    .action_hist_size = 0,
-    .segfaulting = false,
-    .crash_context = NULL,
     .cycle_iter = 0,
     .breakpoint_id = 0,
     .max_cycles = 100,
@@ -71,13 +83,18 @@ static struct phase_driver phase_driver = {
 
 static void resetPhaseDriver()
 {
+    debugger_data.action_hist = MEMfree(debugger_data.action_hist);
+    debugger_data.context_hist = MEMfree(debugger_data.context_hist);
+    debugger_data.phase_driver_hist = MEMfree(debugger_data.phase_driver_hist);
+    debugger_data.hist_size = 0;
+    debugger_data.err_node = NULL;
+    debugger_data.crash_context = (ucontext_t){ 0 };
+    debugger_data.segfaulting = false;
+    debugger_data.restoring_context = (size_t)-1;
+    
     phase_driver.level = 0;
     phase_driver.action_id = 0;
     phase_driver.action_ctr = 0;
-    phase_driver.action_hist = MEMfree(phase_driver.action_hist);
-    phase_driver.action_hist_jmps = MEMfree(phase_driver.action_hist_jmps);
-    phase_driver.action_hist_size = 0;
-    phase_driver.segfaulting = false;
     phase_driver.cycle_iter = 0;
     phase_driver.current_phase = NULL;
     phase_driver.fixed_point = false;
@@ -92,25 +109,32 @@ extern void BreakpointHandler(node_st *node);
 struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype root_type, struct ccn_node *node,
                           bool is_root) {
     phase_driver.action_id++;
-    if (phase_driver.action_hist_size <= ++phase_driver.action_ctr) {
-        phase_driver.action_hist_size += ACTION_HIST_REALLOC_AMT;
+    phase_driver.root_node = node;
+    if (debugger_data.hist_size <= ++phase_driver.action_ctr) {
+        debugger_data.hist_size += ACTION_HIST_REALLOC_AMT;
         // TODO replace realloc with memory.h function
-        phase_driver.action_hist = realloc(phase_driver.action_hist, phase_driver.action_hist_size * sizeof(enum ccn_action_id));  
-        phase_driver.action_hist_jmps = realloc(phase_driver.action_hist_jmps, phase_driver.action_hist_size * sizeof(jmp_buf));
+        debugger_data.action_hist = realloc(debugger_data.action_hist, debugger_data.hist_size * sizeof(enum ccn_action_id));  
+        debugger_data.context_hist = realloc(debugger_data.context_hist, debugger_data.hist_size * sizeof(ucontext_t));
+        debugger_data.phase_driver_hist = realloc(debugger_data.phase_driver_hist, debugger_data.hist_size * sizeof(struct phase_driver));
     }
-    phase_driver.action_hist[phase_driver.action_ctr] = action->action_id;
-    int setjmp_retc = setjmp(phase_driver.action_hist_jmps[phase_driver.action_ctr]);
-    if (setjmp_retc != 0)
-        fprintf(stderr, "Continuing %li from longjump!\n", phase_driver.action_ctr);
-    if (setjmp_retc == -1) {
-        // start debugger
-        if (phase_driver.err_node != NULL)
-            CCNdebug(phase_driver.err_node);
+    debugger_data.action_hist[phase_driver.action_ctr] = action->action_id;
+    memcpy(&(debugger_data.phase_driver_hist[phase_driver.action_ctr]), &phase_driver, sizeof(struct phase_driver));
+    getcontext(&(debugger_data.context_hist[phase_driver.action_ctr]));
+    phase_driver.curr_context = &(debugger_data.context_hist[phase_driver.action_ctr]);
+
+    if (debugger_data.restoring_context != (size_t)-1) {
+        memcpy(&phase_driver, &(debugger_data.phase_driver_hist[debugger_data.restoring_context]), sizeof(struct phase_driver));
+        debugger_data.restoring_context = (size_t)-1;
+
+        if (debugger_data.err_node != NULL)
+            CCNdebug(debugger_data.err_node);
         else
             CCNdebug(phase_driver.root_node);
+
+        debugger_data.segfaulting = false;
     }
 
-    phase_driver.curr_jmp = &(phase_driver.action_hist_jmps[phase_driver.action_ctr]);
+    printf("asdfasdfasdfasdf\n");
 
     // Needed to break after a phase with action ids.
     size_t start_id = phase_driver.action_id;
@@ -339,20 +363,20 @@ void CCNsetTreeCheck(bool enable)
 
 void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void *vcontext)
 {
-    if (phase_driver.segfaulting) {
-        fprintf(stderr, "Non-recoverable segmentation fault! Exiting...");
+    if (debugger_data.segfaulting) {
+        fprintf(stderr, "Non-recoverable segmentation fault! Exiting...\n\n");
         struct sigaction actsegv = { 0 };
         actsegv.sa_handler = SIG_DFL;
         sigaction(SIGSEGV, &actsegv, NULL);
         return;
     }
     
-    phase_driver.segfaulting = true;
+    debugger_data.segfaulting = true;
 
-    phase_driver.crash_context = (ucontext_t*)vcontext;
+    memcpy(&(debugger_data.crash_context), vcontext, sizeof(ucontext_t));
 
     // find problematic node, if present
-    phase_driver.err_node = NULL;
+    debugger_data.err_node = NULL;
     if (info->si_addr != NULL) {
         node_st **node_tracker_list = get_node_tracker_list();
         void *field_ptr;
@@ -360,14 +384,15 @@ void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void
         for (size_t i = 0; !done && i < get_node_id_counter(); i++) {
             for (int j = 0; (field_ptr = DBGHelper_getptr(node_tracker_list[i], j)) != NULL; j++) {
                 if (field_ptr == info->si_addr) {
-                    phase_driver.err_node = node_tracker_list[i];
+                    debugger_data.err_node = node_tracker_list[i];
                     done = true;
                 }
             }
         }
     }
 
-    longjmp(*(phase_driver.curr_jmp), -1);
+    debugger_data.restoring_context = phase_driver.action_ctr;
+    setcontext(phase_driver.curr_context);
 }
 
 /**
@@ -376,15 +401,15 @@ void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void
  */
 void CCNrun(struct ccn_node *node)
 {
-    resetPhaseDriver();
-    watchpoint_init();
-    wpalloc_init();
-
     /* Register SIGSEGV handler */
     struct sigaction actsegv = { 0 };
     actsegv.sa_flags = SA_SIGINFO;
     actsegv.sa_sigaction = &sighandler_sigsegv;
     sigaction(SIGSEGV, &actsegv, NULL);
+
+    resetPhaseDriver();
+    watchpoint_init();
+    wpalloc_init();
 
     watchpoint_set_default_sigsegvhandler(&actsegv);
 
@@ -395,7 +420,9 @@ void CCNrun(struct ccn_node *node)
     watchpoint_fini();
     TRAVstart(node, TRAV_free);
     wpalloc_fini();
-    MEMfree(phase_driver.action_hist);
+    MEMfree(debugger_data.action_hist);
+    MEMfree(debugger_data.context_hist);
+    MEMfree(debugger_data.phase_driver_hist);
 }
 
 size_t CCNgetCurrentActionId()
@@ -410,12 +437,32 @@ size_t CCNgetCurrentActionCtr()
 
 enum ccn_action_id *CCNgetActionHist()
 {
-    return phase_driver.action_hist;
+    return debugger_data.action_hist;
 }
 
 struct ccn_node *CCNgetRootNode()
 {
     return phase_driver.root_node;
+}
+
+bool CCNisSegfaulting()
+{
+    return debugger_data.segfaulting;
+}
+
+void CCNstopSegfaulting()
+{
+    debugger_data.segfaulting = false;
+}
+
+ucontext_t *CCNgetCurrContext()
+{
+    return phase_driver.curr_context;
+}
+
+ucontext_t *CCNgetCrashContext() 
+{
+    return &(debugger_data.crash_context);
 }
 
 static
