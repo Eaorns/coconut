@@ -9,7 +9,7 @@
 #include "ccn/ccn_dbg.h"
 
 #ifndef COCODBG_PROMPT
-#define COCODBG_PROMPT "cocodbg> "
+#define COCODBG_PROMPT "CoCoShell> "
 #endif
 
 int ccndbg_repl_done = 0;

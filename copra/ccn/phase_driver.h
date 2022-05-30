@@ -24,6 +24,8 @@ bool CCNisSegfaulting();
 void CCNstopSegfaulting();
 ucontext_t *CCNgetCurrContext();
 ucontext_t *CCNgetCrashContext();
+void CCNreenter();
+bool CCNstartRestartAt(size_t action);
 // End debugger functions
 void CCNerrorPhase();
 void CCNerrorAction();

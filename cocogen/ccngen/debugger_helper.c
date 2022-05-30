@@ -777,6 +777,236 @@ void *DBGHelper_getptr(node_st *node, int idx) {
 
 }
 
+void DBGHelper_setval(node_st *node, int idx, void *val) {
+    switch (NODE_TYPE(node)) {
+        case NT_ID:
+            switch (idx) {
+                case 0: ID_NEXT(node) = (node_st*)val; break;
+                case 1: ID_ORIG(node) = *(char **)&val; break;
+                case 2: ID_LWR(node) = *(char **)&val; break;
+                case 3: ID_UPR(node) = *(char **)&val; break;
+                case 4: ID_ROW(node) = *(int*)&val; break;
+                case 5: ID_COL_BEGIN(node) = *(int*)&val; break;
+                case 6: ID_COL_END(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_IENUM:
+            switch (idx) {
+                case 0: IENUM_VALS(node) = (node_st*)val; break;
+                case 1: IENUM_NAME(node) = (node_st*)val; break;
+                case 2: IENUM_IPREFIX(node) = (node_st*)val; break;
+                case 3: IENUM_NEXT(node) = (node_st*)val; break;
+                case 4: IENUM_IINFO(node) = *(char **)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_ATTRIBUTE:
+            switch (idx) {
+                case 0: ATTRIBUTE_NAME(node) = (node_st*)val; break;
+                case 1: ATTRIBUTE_TYPE_REFERENCE(node) = (node_st*)val; break;
+                case 2: ATTRIBUTE_LIFETIMES(node) = (node_st*)val; break;
+                case 3: ATTRIBUTE_NEXT(node) = (node_st*)val; break;
+                case 4: ATTRIBUTE_TYPE(node) = *(int*)&val; break;
+                case 5: ATTRIBUTE_IN_CONSTRUCTOR(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_ITRAVDATA:
+            switch (idx) {
+                case 0: ITRAVDATA_NAME(node) = (node_st*)val; break;
+                case 1: ITRAVDATA_TYPE_REFERENCE(node) = (node_st*)val; break;
+                case 2: ITRAVDATA_NEXT(node) = (node_st*)val; break;
+                case 3: ITRAVDATA_TYPE(node) = *(int*)&val; break;
+                case 4: ITRAVDATA_INCLUDE_FILE(node) = *(char **)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_SETOPERATION:
+            switch (idx) {
+                case 0: SETOPERATION_LEFT(node) = (node_st*)val; break;
+                case 1: SETOPERATION_RIGHT(node) = (node_st*)val; break;
+                case 2: SETOPERATION_TYPE(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_SETLITERAL:
+            switch (idx) {
+                case 0: SETLITERAL_REFERENCE(node) = (node_st*)val; break;
+                case 1: SETLITERAL_LEFT(node) = (node_st*)val; break;
+                case 2: SETLITERAL_RIGHT(node) = (node_st*)val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_SETREFERENCE:
+            switch (idx) {
+                case 0: SETREFERENCE_REFERENCE(node) = (node_st*)val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_STE:
+            switch (idx) {
+                case 0: STE_NEXT(node) = (node_st*)val; break;
+                case 1: STE_KEY(node) = (node_st*)val; break;
+                case 2: STE_VALUE(node) = (node_st*)val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_CHILD:
+            switch (idx) {
+                case 0: CHILD_NAME(node) = (node_st*)val; break;
+                case 1: CHILD_LIFETIMES(node) = (node_st*)val; break;
+                case 2: CHILD_NEXT(node) = (node_st*)val; break;
+                case 3: CHILD_TYPE_REFERENCE(node) = (node_st*)val; break;
+                case 4: CHILD_TYPE(node) = *(int*)&val; break;
+                case 5: CHILD_IN_CONSTRUCTOR(node) = *(int*)&val; break;
+                case 6: CHILD_IS_MANDATORY(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_LIFETIME_RANGE:
+            switch (idx) {
+                case 0: LIFETIME_RANGE_TARGET(node) = (node_st*)val; break;
+                case 1: LIFETIME_RANGE_INCLUSIVE(node) = *(bool*)&val; break;
+                case 2: LIFETIME_RANGE_ACTION_ID(node) = *(int*)&val; break;
+                case 3: LIFETIME_RANGE_NEXT_ACTION_ID(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_ILIFETIME:
+            switch (idx) {
+                case 0: ILIFETIME_BEGIN(node) = (node_st*)val; break;
+                case 1: ILIFETIME_END(node) = (node_st*)val; break;
+                case 2: ILIFETIME_NEXT(node) = (node_st*)val; break;
+                case 3: ILIFETIME_TYPE(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_INODESET:
+            switch (idx) {
+                case 0: INODESET_NAME(node) = (node_st*)val; break;
+                case 1: INODESET_EXPR(node) = (node_st*)val; break;
+                case 2: INODESET_UNPACKED(node) = (node_st*)val; break;
+                case 3: INODESET_NEXT(node) = (node_st*)val; break;
+                case 4: INODESET_IINFO(node) = *(char **)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_INODE:
+            switch (idx) {
+                case 0: INODE_NAME(node) = (node_st*)val; break;
+                case 1: INODE_NEXT(node) = (node_st*)val; break;
+                case 2: INODE_ICHILDREN(node) = (node_st*)val; break;
+                case 3: INODE_IATTRIBUTES(node) = (node_st*)val; break;
+                case 4: INODE_LIFETIMES(node) = (node_st*)val; break;
+                case 5: INODE_IIFNO(node) = *(char **)&val; break;
+                case 6: INODE_IS_ROOT(node) = *(int*)&val; break;
+                case 7: INODE_INDEX(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_IPASS:
+            switch (idx) {
+                case 0: IPASS_NAME(node) = (node_st*)val; break;
+                case 1: IPASS_IPREFIX(node) = (node_st*)val; break;
+                case 2: IPASS_TARGET_FUNC(node) = (node_st*)val; break;
+                case 3: IPASS_NEXT(node) = (node_st*)val; break;
+                case 4: IPASS_IIFNO(node) = *(char **)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_ITRAVERSAL:
+            switch (idx) {
+                case 0: ITRAVERSAL_NAME(node) = (node_st*)val; break;
+                case 1: ITRAVERSAL_IPREFIX(node) = (node_st*)val; break;
+                case 2: ITRAVERSAL_INODES(node) = (node_st*)val; break;
+                case 3: ITRAVERSAL_DATA(node) = (node_st*)val; break;
+                case 4: ITRAVERSAL_NEXT(node) = (node_st*)val; break;
+                case 5: ITRAVERSAL_INDEX(node) = *(int*)&val; break;
+                case 6: ITRAVERSAL_IINFO(node) = *(char **)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_IPHASE:
+            switch (idx) {
+                case 0: IPHASE_NAME(node) = (node_st*)val; break;
+                case 1: IPHASE_IPREFIX(node) = (node_st*)val; break;
+                case 2: IPHASE_GATE_FUNC(node) = (node_st*)val; break;
+                case 3: IPHASE_IACTIONS(node) = (node_st*)val; break;
+                case 4: IPHASE_NEXT(node) = (node_st*)val; break;
+                case 5: IPHASE_IS_START(node) = *(int*)&val; break;
+                case 6: IPHASE_IS_CYCLE(node) = *(int*)&val; break;
+                case 7: IPHASE_IINFO(node) = *(char **)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_IACTIONS:
+            switch (idx) {
+                case 0: IACTIONS_REFERENCE(node) = (node_st*)val; break;
+                case 1: IACTIONS_NEXT(node) = (node_st*)val; break;
+                case 2: IACTIONS_ACTION_ID(node) = *(int*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        case NT_AST:
+            switch (idx) {
+                case 0: AST_IPHASES(node) = (node_st*)val; break;
+                case 1: AST_ITRAVERSALS(node) = (node_st*)val; break;
+                case 2: AST_IPASSES(node) = (node_st*)val; break;
+                case 3: AST_INODES(node) = (node_st*)val; break;
+                case 4: AST_INODESETS(node) = (node_st*)val; break;
+                case 5: AST_ENUMS(node) = (node_st*)val; break;
+                case 6: AST_STABLE(node) = (node_st*)val; break;
+                case 7: AST_NUM_TRAVERSALS(node) = *(int*)&val; break;
+                case 8: AST_NUM_NODES(node) = *(int*)&val; break;
+                case 9: AST_ROOT_NODE(node) = (node_st*)val; break;
+                case 10: AST_START_PHASE(node) = (node_st*)val; break;
+                case 11: AST_USES_UNSAFE(node) = *(bool*)&val; break;
+                default:
+                    break;
+            }
+
+            break;
+        default:
+            break;
+    }
+
+}
+
 int DBGHelper_ischild(enum ccn_nodetype type, int idx) {
     switch (type) {
         case NT_ID:
@@ -1012,44 +1242,44 @@ char *DBGHelper_nodename(enum ccn_nodetype type) {
 
 }
 
-hist_item *DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx) {
+hist_item **DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx) {
     switch (type) {
         case NT_ID:
-            return HIST_ID(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_ID(hist)->hist.hist_list[idx]);
                     case NT_IENUM:
-            return HIST_IENUM(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_IENUM(hist)->hist.hist_list[idx]);
                     case NT_ATTRIBUTE:
-            return HIST_ATTRIBUTE(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_ATTRIBUTE(hist)->hist.hist_list[idx]);
                     case NT_ITRAVDATA:
-            return HIST_ITRAVDATA(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_ITRAVDATA(hist)->hist.hist_list[idx]);
                     case NT_SETOPERATION:
-            return HIST_SETOPERATION(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_SETOPERATION(hist)->hist.hist_list[idx]);
                     case NT_SETLITERAL:
-            return HIST_SETLITERAL(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_SETLITERAL(hist)->hist.hist_list[idx]);
                     case NT_SETREFERENCE:
-            return HIST_SETREFERENCE(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_SETREFERENCE(hist)->hist.hist_list[idx]);
                     case NT_STE:
-            return HIST_STE(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_STE(hist)->hist.hist_list[idx]);
                     case NT_CHILD:
-            return HIST_CHILD(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_CHILD(hist)->hist.hist_list[idx]);
                     case NT_LIFETIME_RANGE:
-            return HIST_LIFETIME_RANGE(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_LIFETIME_RANGE(hist)->hist.hist_list[idx]);
                     case NT_ILIFETIME:
-            return HIST_ILIFETIME(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_ILIFETIME(hist)->hist.hist_list[idx]);
                     case NT_INODESET:
-            return HIST_INODESET(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_INODESET(hist)->hist.hist_list[idx]);
                     case NT_INODE:
-            return HIST_INODE(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_INODE(hist)->hist.hist_list[idx]);
                     case NT_IPASS:
-            return HIST_IPASS(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_IPASS(hist)->hist.hist_list[idx]);
                     case NT_ITRAVERSAL:
-            return HIST_ITRAVERSAL(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_ITRAVERSAL(hist)->hist.hist_list[idx]);
                     case NT_IPHASE:
-            return HIST_IPHASE(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_IPHASE(hist)->hist.hist_list[idx]);
                     case NT_IACTIONS:
-            return HIST_IACTIONS(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_IACTIONS(hist)->hist.hist_list[idx]);
                     case NT_AST:
-            return HIST_AST(hist)->hist.hist_list[idx];
+            return (hist_item**)&(HIST_AST(hist)->hist.hist_list[idx]);
                     default:
             return NULL;
                 }
@@ -1099,3 +1329,4 @@ int DBGHelper_node_numvals(enum ccn_nodetype type) {
                 }
 
 }
+

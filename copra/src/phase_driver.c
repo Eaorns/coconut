@@ -20,14 +20,14 @@
 #include "ccn/phase_driver.h"
 #include "ccn/ccn_dbg.h"
 
-#define ACTION_HIST_REALLOC_AMT 128
+#define ACTION_HIST_REALLOC_AMT 32
 
 struct phase_driver {
     size_t level;
     size_t action_id;
     // Begin used by debugger
     size_t action_ctr;
-    ucontext_t *curr_context;
+    size_t action_ctr_nocycle;
     struct ccn_node *root_node;
     // End used by debugger
     size_t cycle_iter;
@@ -42,33 +42,48 @@ struct phase_driver {
     char *breakpoint;
 };
 
+struct dispatch_hist {
+    struct phase_driver driver;
+    struct ccn_node *node; 
+};
+
 struct debugger_data {
     enum ccn_action_id *action_hist;
-    ucontext_t *context_hist;
-    struct phase_driver *phase_driver_hist;
+    size_t *nocycle_ctr_hist;
+    struct dispatch_hist *dispatch_hist;
     size_t hist_size;
 
     struct ccn_node *err_node;
+    ucontext_t curr_context;
     ucontext_t crash_context;
     bool segfaulting;
-    size_t restoring_context;
+    bool reentering;
+
+    size_t restarting_at;
+    size_t restoring_callstack;
 };
+
+
 
 static struct debugger_data debugger_data = {
     .action_hist = NULL,
-    .context_hist = NULL,
-    .phase_driver_hist = NULL,
+    .nocycle_ctr_hist = NULL,
+    .dispatch_hist = NULL,
     .hist_size = 0,
     .err_node = NULL,
+    .curr_context = { 0 },
     .crash_context = { 0 },
     .segfaulting = false,
-    .restoring_context = (size_t)-1
+    .reentering = false,
+    .restarting_at = (size_t)-1,
+    .restoring_callstack = (size_t)-1
 };
 
 static struct phase_driver phase_driver = {
     .level = 0,
     .action_id = 0,
     .action_ctr = 0,
+    .action_ctr_nocycle = 0,
     .cycle_iter = 0,
     .breakpoint_id = 0,
     .max_cycles = 100,
@@ -84,17 +99,21 @@ static struct phase_driver phase_driver = {
 static void resetPhaseDriver()
 {
     debugger_data.action_hist = MEMfree(debugger_data.action_hist);
-    debugger_data.context_hist = MEMfree(debugger_data.context_hist);
-    debugger_data.phase_driver_hist = MEMfree(debugger_data.phase_driver_hist);
+    debugger_data.nocycle_ctr_hist = MEMfree(debugger_data.nocycle_ctr_hist);
+    debugger_data.dispatch_hist = MEMfree(debugger_data.dispatch_hist);
     debugger_data.hist_size = 0;
     debugger_data.err_node = NULL;
+    debugger_data.curr_context = (ucontext_t){ 0 };
     debugger_data.crash_context = (ucontext_t){ 0 };
     debugger_data.segfaulting = false;
-    debugger_data.restoring_context = (size_t)-1;
+    debugger_data.reentering = false;
+    debugger_data.restarting_at = (size_t)-1;
+    debugger_data.restoring_callstack = (size_t)-1;
     
     phase_driver.level = 0;
     phase_driver.action_id = 0;
     phase_driver.action_ctr = 0;
+    phase_driver.action_ctr_nocycle = 0;
     phase_driver.cycle_iter = 0;
     phase_driver.current_phase = NULL;
     phase_driver.fixed_point = false;
@@ -108,33 +127,69 @@ extern void BreakpointHandler(node_st *node);
 
 struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype root_type, struct ccn_node *node,
                           bool is_root) {
-    phase_driver.action_id++;
+    if (debugger_data.restoring_callstack != (size_t)-1) {
+        if (++phase_driver.action_ctr_nocycle < debugger_data.restoring_callstack) {
+            bool phase_error = false;
+            switch (action->type) {
+            case CCN_ACTION_PHASE:
+                phase_error = phase_driver.phase_error;
+                phase_driver.phase_error = false;
+                node = StartPhase(&(action->phase), action->name, node);
+                phase_driver.phase_error = phase_error || phase_driver.phase_error;
+                break;
+            case CCN_ACTION_NULL:
+                err(EXIT_FAILURE, "[coconut] error in phase driver.");
+            default:
+                break;
+            }
+
+            if (phase_driver.action_error) {
+                fprintf(stderr, "[coconut] Action error received. Stopping...\n");
+                CTIabortCompilation();
+            }
+
+            if (debugger_data.restarting_at == (size_t)-1 && action->type == CCN_ACTION_PHASE && phase_driver.verbosity > PD_V_QUIET) {
+                fprintf(stderr, "<< %s\n", action->name);
+            }
+            return node;
+        } else {
+            debugger_data.restoring_callstack = (size_t)-1;
+        }
+    } else {
+        phase_driver.action_id++;
+        phase_driver.action_ctr++;
+        phase_driver.action_ctr_nocycle++;
+    }
+
+    MEMsetAction(phase_driver.action_ctr);
+    
     phase_driver.root_node = node;
-    if (debugger_data.hist_size <= ++phase_driver.action_ctr) {
+    if (debugger_data.hist_size <= phase_driver.action_ctr) {
         debugger_data.hist_size += ACTION_HIST_REALLOC_AMT;
         // TODO replace realloc with memory.h function
         debugger_data.action_hist = realloc(debugger_data.action_hist, debugger_data.hist_size * sizeof(enum ccn_action_id));  
-        debugger_data.context_hist = realloc(debugger_data.context_hist, debugger_data.hist_size * sizeof(ucontext_t));
-        debugger_data.phase_driver_hist = realloc(debugger_data.phase_driver_hist, debugger_data.hist_size * sizeof(struct phase_driver));
+        debugger_data.nocycle_ctr_hist = realloc(debugger_data.nocycle_ctr_hist, debugger_data.hist_size * sizeof(size_t));  
+        debugger_data.dispatch_hist = realloc(debugger_data.dispatch_hist, debugger_data.hist_size * sizeof(struct dispatch_hist));  
     }
     debugger_data.action_hist[phase_driver.action_ctr] = action->action_id;
-    memcpy(&(debugger_data.phase_driver_hist[phase_driver.action_ctr]), &phase_driver, sizeof(struct phase_driver));
-    getcontext(&(debugger_data.context_hist[phase_driver.action_ctr]));
-    phase_driver.curr_context = &(debugger_data.context_hist[phase_driver.action_ctr]);
+    debugger_data.nocycle_ctr_hist[phase_driver.action_ctr] = phase_driver.action_ctr_nocycle;
+    memcpy(&(debugger_data.dispatch_hist[phase_driver.action_ctr].driver), &phase_driver, sizeof(struct phase_driver));
+    debugger_data.dispatch_hist[phase_driver.action_ctr].node = node;
 
-    if (debugger_data.restoring_context != (size_t)-1) {
-        memcpy(&phase_driver, &(debugger_data.phase_driver_hist[debugger_data.restoring_context]), sizeof(struct phase_driver));
-        debugger_data.restoring_context = (size_t)-1;
+    do {
+        debugger_data.reentering = false;
+        getcontext(&(debugger_data.curr_context));
+    } while (debugger_data.reentering);
 
+    if (debugger_data.segfaulting) {
         if (debugger_data.err_node != NULL)
             CCNdebug(debugger_data.err_node);
         else
             CCNdebug(phase_driver.root_node);
-
-        debugger_data.segfaulting = false;
+        
+        if (debugger_data.restarting_at != (size_t)-1)
+            return node;
     }
-
-    printf("asdfasdfasdfasdf\n");
 
     // Needed to break after a phase with action ids.
     size_t start_id = phase_driver.action_id;
@@ -154,7 +209,7 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
             CTIabortOnError();
         }
     }
-
+    
     bool phase_error = false;
     switch (action->type) {
     case CCN_ACTION_PASS:
@@ -187,7 +242,7 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
         BreakpointHandler(node);
         exit(0);
     }
-    if (action->type == CCN_ACTION_PHASE && phase_driver.verbosity > PD_V_QUIET) {
+    if (debugger_data.restarting_at == (size_t)-1 && action->type == CCN_ACTION_PHASE && phase_driver.verbosity > PD_V_QUIET) {
         fprintf(stderr, "<< %s\n", action->name);
     }
 
@@ -262,28 +317,33 @@ struct ccn_node *StartPhase(struct ccn_phase *phase, char *phase_name, struct cc
     phase_driver.level++;
     bool cycle = phase->is_cycle;
     uint64_t curr_action_id = phase_driver.action_id;
+    size_t curr_action_ctr_nocycle = phase_driver.action_ctr_nocycle;
 
     do {
         // If we cycle around, reset the action id.
         phase_driver.fixed_point = true;
         phase_driver.action_id = curr_action_id;
+        phase_driver.action_ctr_nocycle = curr_action_ctr_nocycle;
         size_t action_counter = 0;
         enum ccn_action_id action_id = phase->action_table[action_counter];
-        while (action_id != CCNAC_ID_NULL) {
+        while (action_id != CCNAC_ID_NULL && debugger_data.restarting_at == (size_t)-1) {
             struct ccn_action *action = CCNgetActionFromID(action_id);
             node = CCNdispatchAction(action, phase->root_type, node, false);
             action_counter++;
             action_id = phase->action_table[action_counter];
         }
-        phase_driver.cycle_iter++;
-    } while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles && !(phase_driver.fixed_point));
+        if (debugger_data.restarting_at == (size_t)-1)
+            phase_driver.cycle_iter++;
+    } while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles && 
+            !(phase_driver.fixed_point) && debugger_data.restarting_at == (size_t)-1);
 
     if (phase_driver.phase_error) {
         fprintf(stderr, "[coconut] Phase error received. Stopping...\n");
         CTIabortCompilation();
     }
 
-    phase_driver.cycle_iter = 0;
+    if (debugger_data.restarting_at == (size_t)-1)
+        phase_driver.cycle_iter = 0;
     phase_driver.level--;
 
     phase_driver.current_phase = prev;
@@ -391,8 +451,8 @@ void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void
         }
     }
 
-    debugger_data.restoring_context = phase_driver.action_ctr;
-    setcontext(phase_driver.curr_context);
+    // debugger_data.restoring_callstack = phase_driver.action_ctr;
+    setcontext(&(debugger_data.curr_context));
 }
 
 /**
@@ -411,18 +471,34 @@ void CCNrun(struct ccn_node *node)
     watchpoint_init();
     wpalloc_init();
 
+    MEMdoQueue(true);
+
     watchpoint_set_default_sigsegvhandler(&actsegv);
 
-    phase_driver.root_node = node;
-    node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
-    CCNdebug(node);
+    struct ccn_node *orig_node = node;
+
+    do {
+        phase_driver.root_node = orig_node;
+
+        if (debugger_data.restarting_at != (size_t)-1) {
+            memcpy(&phase_driver, &(debugger_data.dispatch_hist[debugger_data.restarting_at].driver), sizeof(struct phase_driver));
+            node = debugger_data.dispatch_hist[debugger_data.restarting_at].node;
+            phase_driver.level = 0;
+            phase_driver.action_ctr_nocycle = 0;
+            debugger_data.restoring_callstack = debugger_data.nocycle_ctr_hist[debugger_data.restarting_at];
+            debugger_data.restarting_at = (size_t)-1;
+        }
+
+        node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
+    } while (debugger_data.restarting_at != (size_t)-1);
     
     watchpoint_fini();
     TRAVstart(node, TRAV_free);
     wpalloc_fini();
     MEMfree(debugger_data.action_hist);
-    MEMfree(debugger_data.context_hist);
-    MEMfree(debugger_data.phase_driver_hist);
+    MEMfree(debugger_data.nocycle_ctr_hist);
+    MEMfree(debugger_data.dispatch_hist);
+    MEMqueueCleanup(0, (size_t)-1);
 }
 
 size_t CCNgetCurrentActionId()
@@ -457,12 +533,26 @@ void CCNstopSegfaulting()
 
 ucontext_t *CCNgetCurrContext()
 {
-    return phase_driver.curr_context;
+    return &(debugger_data.curr_context);
 }
 
 ucontext_t *CCNgetCrashContext() 
 {
     return &(debugger_data.crash_context);
+}
+
+void CCNreenter()
+{
+    debugger_data.reentering = true;
+    setcontext(&(debugger_data.curr_context));
+}
+
+bool CCNstartRestartAt(size_t action)
+{
+    if (action > phase_driver.action_ctr)
+        return false;
+    debugger_data.restarting_at = action;
+    return true;
 }
 
 static

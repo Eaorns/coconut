@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <dlfcn.h>
 #include <unistd.h>
+#include <err.h>
 
 #include "ccngen/ast.h"
 #include "ccngen/debugger_helper.h"
@@ -16,39 +17,64 @@
 #include "palm/memory.h"
 #include "palm/watchpoint.h"
 
+#define ANSI_COLOR_BLACK    "\x1b[30m"
 #define ANSI_COLOR_RED      "\x1b[31m"
+#define ANSI_COLOR_BRED     "\x1b[91m"
 #define ANSI_COLOR_GREEN    "\x1b[32m"
+#define ANSI_COLOR_BGREEN   "\x1b[92m"
 #define ANSI_COLOR_YELLOW   "\x1b[33m"
+#define ANSI_COLOR_BYELLOW  "\x1b[93m"
 #define ANSI_COLOR_BLUE     "\x1b[34m"
 #define ANSI_COLOR_BBLUE    "\x1b[94m"
 #define ANSI_COLOR_MAGENTA  "\x1b[35m"
 #define ANSI_COLOR_BMAGENTA "\x1b[95m"
 #define ANSI_COLOR_CYAN     "\x1b[36m"
-#define ANSI_COLOR_RESET    "\x1b[0m"
+#define ANSI_COLOR_BCYAN    "\x1b[96m"
+#define ANSI_BG_RED         "\x1b[41m"
+#define ANSI_BG_GREEN       "\x1b[42m"
+#define ANSI_BG_YELLOW      "\x1b[43m"
+#define ANSI_RESET          "\x1b[0m"
 
 char *executable_name = NULL;
 bool current_path_initialized = false;
 char current_path[256];
+
+size_t curr_ast_state = (size_t)-1;
 
 /**
  *  Declare command functions
  */
 
 int comm_view(char*);
+int comm_list(char*);
 int comm_goto(char*);
+int comm_tree(char*);
+int comm_rern(char*);
 int comm_quit(char*);
 int comm_cont(char*);
 int comm_help(char*);
 
-argument args_goto[] = {{"child",  "Move to a given child (by name or index)", NULL},
-                        {"parent", "Move to the parent",   NULL},
+argument args_list[] = {{"travhist", "Print all past traversals", NULL},
                         {(char*)NULL, NULL, NULL}};
 
-command commands[] = {{"view",     "v", comm_view,  "Display a node and its history", NULL},
-                      {"goto",     "g", comm_goto,  "Move to another node", args_goto},
-                      {"quit",     "q", comm_quit,  "Exit debugger and exit program", NULL},
-                      {"continue", "c", comm_cont,  "Exit debugger and continue execution", NULL},
-                      {"help",     "h", comm_help,  "Display possible commands", NULL},
+argument args_goto[] = {{"child",  "Move to a given child (by name or index)", NULL},
+                        {"parent", "Move to the parent",                       NULL},
+                        {(char*)NULL, NULL, NULL}};
+
+argument args_tree[] = {{"revert", "Change the state of the tree to the given point. Can be forward.", NULL},
+                        {(char*)NULL, NULL, NULL}};
+
+argument args_rern[] = {{"last", "Restart last traversal", NULL},
+                        {(char*)NULL, NULL, NULL}};
+
+command commands[] = {{"view",     "v", comm_view, "Display a node and its history",           NULL},
+                      {"list",     "l", comm_list, "Print information about a given argument", args_list},
+                      {"goto",     "g", comm_goto, "Move to another node",                     args_goto},
+                      {"tree",     "t", comm_tree, "Change the state of the tree",             args_tree},
+                      {"rerun",    "r", comm_rern, "Rerun from a given traversal",             args_rern},
+                      {"quit",     "q", comm_quit, "Exit debugger and exit program",           NULL},
+                      {"continue", "c", comm_cont, "Exit debugger and continue execution",     NULL},
+                      {"help",     "h", comm_help, "Display possible commands",                NULL},
                       {(char*)NULL, NULL, (comm_func_t*)NULL, (char*)NULL, NULL}};
 
 bool node_exists(node_st *ptr);
@@ -72,12 +98,36 @@ int cocodbg_start(node_st *start_node)
         Dl_info func_info = { 0 };
         void *rip = (void*)(CCNgetCrashContext()->uc_mcontext.gregs[REG_RIP]);
         dladdr(rip, &func_info);
-        printf("\nSegfault generated at %s\n\n", 
+        printf("\n"ANSI_COLOR_BLACK ANSI_BG_YELLOW"Segfault generated at %s"ANSI_RESET"\n", 
                strip_path(run_addr2line((void*)((char*)rip - (char*)func_info.dli_fbase))));
+    }
+    printf("\n "ANSI_COLOR_GREEN"-- Starting CoCoNut debugger --"ANSI_RESET"\n\n");
+
+    curr_ast_state = (size_t)-1;
+
+    int retc = cocodbg_repl();
+
+    if (curr_ast_state != (size_t)-1) {
+        node_st *node, **nodelist = get_node_tracker_list();
+        hist_item *hist, **hist_ptr;
+        for (size_t i = 0; i < get_node_id_counter(); i++) {
+            node = nodelist[i];
+            if (node == NULL)
+                continue;
+            for (int j = 0; j < DBGHelper_node_numvals(NODE_TYPE(node)); j++) {
+                hist_ptr = DBGHelper_nodehist(NODE_TYPE(node), NODE_HIST(node), j);
+                hist = *hist_ptr;
+                while (hist != NULL && hist->action >= curr_ast_state) {
+                    *hist_ptr = hist->next;
+                    free(hist);
+                    hist = *hist_ptr;
+                }
+            }
+        }
     }
 
     // Assumes watchpoints have already been disabled and will re re-enabled by caller.
-    return cocodbg_repl();
+    return retc;
 }
 
 
@@ -161,6 +211,13 @@ char *run_addr2line(void *addr)
     return output;
 }
 
+char *color_addrline(char *str)
+{
+    char *path = strtok(str, ":");
+    char *line = strtok(NULL, "");
+    return STRcatn(7, ANSI_COLOR_BCYAN, path, ANSI_RESET, ":", ANSI_COLOR_YELLOW, line, ANSI_RESET);
+}
+
 
 void print_val(enum H_DATTYPES type, void *data)
 {
@@ -178,13 +235,13 @@ void print_val(enum H_DATTYPES type, void *data)
         case HDT_link:
             /* Assume the node is invalid if the first value (node_type) is 0 */
             if (*(int*)data == 0) {
-                printf(ANSI_COLOR_BBLUE"(nil)"ANSI_COLOR_RESET"("ANSI_COLOR_YELLOW"-1"ANSI_COLOR_RESET", "ANSI_COLOR_CYAN"%p"ANSI_COLOR_RESET")", data);
+                printf(ANSI_COLOR_BBLUE"(nil)"ANSI_RESET"("ANSI_COLOR_YELLOW"-1"ANSI_RESET", "ANSI_COLOR_CYAN"%p"ANSI_RESET")", data);
             }
             else {
-                printf(ANSI_COLOR_BBLUE"%s"ANSI_COLOR_RESET"("ANSI_COLOR_YELLOW"%li"ANSI_COLOR_RESET", "ANSI_COLOR_CYAN"%p"ANSI_COLOR_RESET")", 
+                printf(ANSI_COLOR_BBLUE"%s"ANSI_RESET"("ANSI_COLOR_YELLOW"%li"ANSI_RESET", "ANSI_COLOR_CYAN"%p"ANSI_RESET")", 
                        DBGHelper_nodename(NODE_TYPE(*(node_st**)data)), NODE_ID(*(node_st**)data), (void*)*(node_st**)data);
                 if (NODE_TRASHED(*(node_st**)data))
-                    printf(ANSI_COLOR_RED" (trashed)"ANSI_COLOR_RESET);
+                    printf(ANSI_COLOR_RED" (trashed)"ANSI_RESET);
             }
             break;
         case HDT_link_or_enum:
@@ -194,7 +251,7 @@ void print_val(enum H_DATTYPES type, void *data)
             printf("%i", *(int*)data);
             break;
         case HDT_string:
-            printf("\"%s\"", (char*)data);
+            printf("\"%s\"", *(char**)data);
             break;
         case HDT_bool:
             printf("%s", ((*(int*)data) ? "true" : "false"));
@@ -235,18 +292,27 @@ void print_val(enum H_DATTYPES type, void *data)
     }
 }
 
-void print_hist_line(int i, hist_item *hitem, enum H_DATTYPES dattype)
+void print_trav_hist()
+{
+    enum ccn_action_id *action_hist = CCNgetActionHist();
+    for (size_t i = 1; i <= CCNgetCurrentActionCtr(); i++) {
+        printf("  #%lu: \t%s\n", i, CCNgetActionFromID(action_hist[i])->name);
+    }
+    printf("\n");
+}
+
+void print_node_hist_line(int i, hist_item *hitem, enum H_DATTYPES dattype)
 {
     Dl_info func_info = { 0 };
     printf("   #%i ", i);
     print_val(dattype, &(hitem->val));
     dladdr(hitem->rip, &func_info);
-    printf(", %s() at %s", func_info.dli_sname, strip_path(run_addr2line((void*)((char*)hitem->rip - (char*)func_info.dli_fbase))));
+    printf(", %s() at %s", func_info.dli_sname, color_addrline(strip_path(run_addr2line((void*)((char*)hitem->rip - (char*)func_info.dli_fbase)))));
     printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
             
 }
 
-void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
+void print_node_hist(hist_item *hitem, enum H_DATTYPES dattype)
 {
     bool skipping = false;
     int j;
@@ -266,15 +332,34 @@ void print_hist(hist_item *hitem, enum H_DATTYPES dattype)
             }
         }
         if (skipping) {
-            print_hist_line(j-1, hitem_prev, dattype);
+            print_node_hist_line(j-1, hitem_prev, dattype);
             skipping = false;
         }
-        print_hist_line(j, hitem, dattype);
+        print_node_hist_line(j, hitem, dattype);
         hitem = hitem->next;
     }
     if (skipping) {
-        print_hist_line(j-1, hitem_prev, dattype);
+        print_node_hist_line(j-1, hitem_prev, dattype);
     }
+}
+
+void setAST(size_t action)
+{
+    node_st *node, **nodelist = get_node_tracker_list();
+    hist_item *hist;
+    for (size_t i = 0; i < get_node_id_counter(); i++) {
+        node = nodelist[i];
+        if (node == NULL)
+            continue;
+        for (int j = 0; j < DBGHelper_node_numvals(NODE_TYPE(node)); j++) {
+            hist = *DBGHelper_nodehist(NODE_TYPE(node), NODE_HIST(node), j);
+            while (hist != NULL && hist->action >= action)
+                hist = hist->next;
+            if (hist != NULL)
+                DBGHelper_setval(node, j, hist->val);
+        }
+    }
+    curr_ast_state = action;
 }
 
 /**
@@ -288,12 +373,29 @@ int comm_view(char *comm __attribute__((unused)))
     char *valname = DBGHelper_iton(NODE_TYPE(curr_node), 0);
     ccn_hist *hist = NODE_HIST(curr_node);
     for (int i = 0; valname; valname = DBGHelper_iton(NODE_TYPE(curr_node), ++i)) {
-        printf("%i: "ANSI_COLOR_BMAGENTA"%s"ANSI_COLOR_RESET" -- ", i, valname);
+        printf("%i: "ANSI_COLOR_BMAGENTA"%s"ANSI_RESET" -- ", i, valname);
         print_val(DBGHelper_gettype(NODE_TYPE(curr_node), i), DBGHelper_getptr(curr_node, i));
         printf("\n");
 
-        print_hist(DBGHelper_nodehist(NODE_TYPE(curr_node), hist, i), DBGHelper_gettype(NODE_TYPE(curr_node), i));
+        print_node_hist(*DBGHelper_nodehist(NODE_TYPE(curr_node), hist, i), DBGHelper_gettype(NODE_TYPE(curr_node), i));
     }   
+    return 0;
+}
+
+int comm_list(char *comm)
+{
+    char *token = strtok(comm, " ");
+    if (token == NULL) {
+        printf("'print' requires additional arguments.\n");
+        return -1;
+    }
+    switch (parse_arg(args_list, token)) {
+        case 0:
+            print_trav_hist();
+            break;
+        default:
+            printf("Invalid argument '%s' given!\n", token);
+    }
     return 0;
 }
 
@@ -360,6 +462,49 @@ int comm_goto(char *comm)
             break;  
     }
     fflush(stdout);
+    return 0;
+}
+
+int comm_tree(char *comm)
+{
+    char *token = strtok(comm, " ");
+    switch (parse_arg(args_tree, token)) {
+        case 0:
+            token = strtok(NULL, " ");
+            if (!isnumber(token))
+                printf("Please provide a point to revert the AST to!\n");
+            else
+                setAST(atoi(token));
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
+int comm_rern(char *comm)
+{
+    char *token = strtok(comm, " ");
+    switch (parse_arg(args_rern, token)) {
+        case 0:
+            ccndbg_repl_done = 3;
+            return 0;
+        default:
+            break;
+    }
+
+    if (!isnumber(token)) {
+        printf("Please provide the number of the action to restart from.\n");
+        return -1;
+    }
+    // TODO atoi cannot handle same sizes as size_t
+    size_t action = (size_t)atoi(token);
+    if (!CCNstartRestartAt(action)) {
+        printf("Invalid action given!\n");
+    }
+    printf("Restarting from action %lu (%s). Exiting debugger...\n\n", action, 
+           CCNgetActionFromID(CCNgetActionHist()[action])->name);
+    ccndbg_repl_done = 3;
     return 0;
 }
 

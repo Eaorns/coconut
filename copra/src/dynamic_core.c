@@ -127,6 +127,7 @@ struct ccn_node *CCNdebug(struct ccn_node *arg_node)
     TRAVstart(CCNgetRootNode(), TRAV_dbg);
     int res = cocodbg_start(arg_node);
     watchpoint_enable_all();
+    watchpoint_restore_sighandler();
 
     switch (res) {
         case 1:
@@ -134,10 +135,12 @@ struct ccn_node *CCNdebug(struct ccn_node *arg_node)
             exit(0);
         case 2:
             if (CCNisSegfaulting()) {
-                printf("%p %p\n", CCNgetCrashContext(), CCNgetCrashContext()->uc_mcontext.gregs[REG_RIP]);
                 CCNstopSegfaulting();
-                setcontext(CCNgetCrashContext());
+                CCNreenter();
             }
+            break;
+        case 3:
+            CCNstopSegfaulting();
             break;
         default:
             break;

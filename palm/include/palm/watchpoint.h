@@ -1,6 +1,6 @@
 #include <signal.h>
 
-#define WP_DISABLE
+// #define WP_DISABLE
 // #define DO_WP_DEBUG
 
 int watchpoint_init();
