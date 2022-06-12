@@ -22,7 +22,7 @@ enum debug_gen_action {
     DGA_node_numvals,
 };
 
-enum debug_gen_action curr_action;
+enum debug_gen_action curr_gen_action;
 int counter;
 char *curr_node_name;
 
@@ -35,7 +35,7 @@ node_st *DGDFast(node_st *node)
     OUT("#include <stddef.h>\n");
     OUT("#include \"palm/str.h\"\n");
 
-    curr_action = DGA_name_to_int;
+    curr_gen_action = DGA_name_to_int;
     OUT_START_FUNC("int DBGHelper_ntoi(enum ccn_nodetype type, char *name)");
     OUT_BEGIN_SWITCH("type");
     TRAVchildren(node);
@@ -45,7 +45,7 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_int_to_name;
+    curr_gen_action = DGA_int_to_name;
     OUT_START_FUNC("char *DBGHelper_iton(enum ccn_nodetype type, int idx)");
     OUT_BEGIN_SWITCH("type");
     TRAVchildren(node);
@@ -55,7 +55,7 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_gettype;
+    curr_gen_action = DGA_gettype;
     OUT_START_FUNC("enum H_DATTYPES DBGHelper_gettype(enum ccn_nodetype type, int idx)");
     OUT_BEGIN_SWITCH("type");
     TRAVchildren(node);
@@ -65,7 +65,7 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_getptr;
+    curr_gen_action = DGA_getptr;
     OUT_START_FUNC("void *DBGHelper_getptr(node_st *node, int idx)");
     OUT_BEGIN_SWITCH("NODE_TYPE(node)");
     TRAVchildren(node);
@@ -75,8 +75,9 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_setval;
+    curr_gen_action = DGA_setval;
     OUT_START_FUNC("void DBGHelper_setval(node_st *node, int idx, void *val)");
+    OUT_FIELD("void **val_ref = &val");
     OUT_BEGIN_SWITCH("NODE_TYPE(node)");
     TRAVchildren(node);
     OUT_BEGIN_DEFAULT_CASE();
@@ -84,7 +85,7 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_ischild;
+    curr_gen_action = DGA_ischild;
     OUT_START_FUNC("int DBGHelper_ischild(enum ccn_nodetype type, int idx)");
     OUT_BEGIN_SWITCH("type");
     TRAVchildren(node);
@@ -94,7 +95,7 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_nodename;
+    curr_gen_action = DGA_nodename;
     OUT_START_FUNC("char *DBGHelper_nodename(enum ccn_nodetype type)");
     OUT_BEGIN_SWITCH("type");
     TRAVchildren(node);
@@ -104,7 +105,7 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_nodehist;
+    curr_gen_action = DGA_nodehist;
     OUT_START_FUNC("hist_item **DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx)");
     OUT_BEGIN_SWITCH("type");
     TRAVchildren(node);
@@ -114,7 +115,7 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    curr_action = DGA_node_numvals;
+    curr_gen_action = DGA_node_numvals;
     OUT_START_FUNC("int DBGHelper_node_numvals(enum ccn_nodetype type)");
     OUT_BEGIN_SWITCH("type");
     TRAVchildren(node);
@@ -142,7 +143,7 @@ node_st *DGDFinode(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
 
-    switch (curr_action) {
+    switch (curr_gen_action) {
         case DGA_name_to_int:
             counter = 0;
             OUT_BEGIN_CASE("NT_%s", ID_UPR(INODE_NAME(node)));
@@ -250,7 +251,7 @@ node_st *DGDFchild(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
 
-    switch (curr_action) {
+    switch (curr_gen_action) {
         case DGA_name_to_int:
             OUT_FIELD("if (STReq(name, \"%s\")) return %i", ID_LWR(CHILD_NAME(node)), counter++);
             break;
@@ -284,7 +285,7 @@ node_st *DGDFattribute(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
 
-    switch (curr_action) {
+    switch (curr_gen_action) {
         case DGA_name_to_int:
             OUT_FIELD("if (STReq(name, \"%s\")) return %i", ID_LWR(ATTRIBUTE_NAME(node)), counter++);
             break;
@@ -303,13 +304,13 @@ node_st *DGDFattribute(node_st *node)
                     OUT_FIELD("case %i: %s_%s(node) = (node_st*)val; break", counter++, curr_node_name, ID_UPR(ATTRIBUTE_NAME(node)));
                     break;
                 case AT_link_or_enum:
-                    OUT_FIELD("case %i: %s_%s(node) = *(int*)&val; break", counter++, curr_node_name, ID_UPR(ATTRIBUTE_NAME(node)));
+                    OUT_FIELD("case %i: %s_%s(node) = *(int*)val_ref; break", counter++, curr_node_name, ID_UPR(ATTRIBUTE_NAME(node)));
                     break;
                 case AT_user:
                     OUT_FIELD("case %i: %s_%s(node) = val; break", counter++, curr_node_name, ID_UPR(ATTRIBUTE_NAME(node)));
                     break;
                 default:
-                    OUT_FIELD("case %i: %s_%s(node) = *(%s*)&val; break", counter++, curr_node_name, ID_UPR(ATTRIBUTE_NAME(node)), 
+                    OUT_FIELD("case %i: %s_%s(node) = *(%s*)val_ref; break", counter++, curr_node_name, ID_UPR(ATTRIBUTE_NAME(node)),
                               FMTattributeTypeToString(ATTRIBUTE_TYPE(node)));
             }
             break;

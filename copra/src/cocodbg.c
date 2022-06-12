@@ -47,6 +47,7 @@ size_t curr_ast_state = (size_t)-1;
 
 int comm_view(char*);
 int comm_list(char*);
+int comm_setv(char*);
 int comm_goto(char*);
 int comm_tree(char*);
 int comm_rern(char*);
@@ -69,6 +70,7 @@ argument args_rern[] = {{"last", "Restart last traversal", NULL},
 
 command commands[] = {{"view",     "v", comm_view, "Display a node and its history",           NULL},
                       {"list",     "l", comm_list, "Print information about a given argument", args_list},
+                      {"set",      "s", comm_setv, "Change a value in a node",                 NULL},
                       {"goto",     "g", comm_goto, "Move to another node",                     args_goto},
                       {"tree",     "t", comm_tree, "Change the state of the tree",             args_tree},
                       {"rerun",    "r", comm_rern, "Rerun from a given traversal",             args_rern},
@@ -93,15 +95,19 @@ int cocodbg_start(node_st *start_node)
         curr_node = CCNgetRootNode();
     else
         curr_node = start_node;
-    
+
     if (CCNisSegfaulting()) {
         Dl_info func_info = { 0 };
         void *rip = (void*)(CCNgetCrashContext()->uc_mcontext.gregs[REG_RIP]);
         dladdr(rip, &func_info);
-        printf("\n"ANSI_COLOR_BLACK ANSI_BG_YELLOW"Segfault generated at %s"ANSI_RESET"\n", 
+        printf("\n"ANSI_COLOR_BLACK ANSI_BG_YELLOW"Segfault generated at %s"ANSI_RESET"\n",
                strip_path(run_addr2line((void*)((char*)rip - (char*)func_info.dli_fbase))));
     }
     printf("\n "ANSI_COLOR_GREEN"-- Starting CoCoNut debugger --"ANSI_RESET"\n\n");
+
+    if (!executable_name) {
+        printf("Executable name not set! please specify to be able to get files and lines of operations.\n\n");
+    }
 
     curr_ast_state = (size_t)-1;
 
@@ -196,6 +202,8 @@ bool node_exists(node_st *ptr)
 
 char *run_addr2line(void *addr)
 {
+    if (!executable_name)
+        return "??:??";
     char command[128];
     snprintf(command, 128, "addr2line -e %s %p", executable_name, addr);
     FILE *out = popen(command, "r");
@@ -238,7 +246,7 @@ void print_val(enum H_DATTYPES type, void *data)
                 printf(ANSI_COLOR_BBLUE"(nil)"ANSI_RESET"("ANSI_COLOR_YELLOW"-1"ANSI_RESET", "ANSI_COLOR_CYAN"%p"ANSI_RESET")", data);
             }
             else {
-                printf(ANSI_COLOR_BBLUE"%s"ANSI_RESET"("ANSI_COLOR_YELLOW"%li"ANSI_RESET", "ANSI_COLOR_CYAN"%p"ANSI_RESET")", 
+                printf(ANSI_COLOR_BBLUE"%s"ANSI_RESET"("ANSI_COLOR_YELLOW"%li"ANSI_RESET", "ANSI_COLOR_CYAN"%p"ANSI_RESET")",
                        DBGHelper_nodename(NODE_TYPE(*(node_st**)data)), NODE_ID(*(node_st**)data), (void*)*(node_st**)data);
                 if (NODE_TRASHED(*(node_st**)data))
                     printf(ANSI_COLOR_RED" (trashed)"ANSI_RESET);
@@ -303,13 +311,19 @@ void print_trav_hist()
 
 void print_node_hist_line(int i, hist_item *hitem, enum H_DATTYPES dattype)
 {
-    Dl_info func_info = { 0 };
-    printf("   #%i ", i);
-    print_val(dattype, &(hitem->val));
-    dladdr(hitem->rip, &func_info);
-    printf(", %s() at %s", func_info.dli_sname, color_addrline(strip_path(run_addr2line((void*)((char*)hitem->rip - (char*)func_info.dli_fbase)))));
-    printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
-            
+    if (hitem->rip == (void*)-1) {
+        printf("   #%i ", i);
+        print_val(dattype, &(hitem->val));
+        printf(", in debugger\n");
+    } else {
+        Dl_info func_info = { 0 };
+        printf("   #%i ", i);
+        print_val(dattype, &(hitem->val));
+        dladdr(hitem->rip, &func_info);
+        printf(", %s() at %s", func_info.dli_sname, color_addrline(strip_path(run_addr2line((void*)((char*)hitem->rip - (char*)func_info.dli_fbase)))));
+        printf(" (action %lu: %s)\n", hitem->action, CCNgetActionFromID(CCNgetActionHist()[hitem->action])->name);
+    }
+
 }
 
 void print_node_hist(hist_item *hitem, enum H_DATTYPES dattype)
@@ -368,7 +382,7 @@ void setAST(size_t action)
 
 int comm_view(char *comm __attribute__((unused)))
 {
-    printf("  node %s (index %li, addr %p)\n", 
+    printf("  node %s (index %li, addr %p)\n",
            DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
     char *valname = DBGHelper_iton(NODE_TYPE(curr_node), 0);
     ccn_hist *hist = NODE_HIST(curr_node);
@@ -378,7 +392,7 @@ int comm_view(char *comm __attribute__((unused)))
         printf("\n");
 
         print_node_hist(*DBGHelper_nodehist(NODE_TYPE(curr_node), hist, i), DBGHelper_gettype(NODE_TYPE(curr_node), i));
-    }   
+    }
     return 0;
 }
 
@@ -396,6 +410,54 @@ int comm_list(char *comm)
         default:
             printf("Invalid argument '%s' given!\n", token);
     }
+    return 0;
+}
+
+int comm_setv(char *comm)
+{
+    int idx = -1;
+    char *token = strtok(comm, " ");
+    if (!token) {
+        printf("Please specify a child by name or index!\n");
+        return -1;
+    }
+    if (isnumber(token)) {
+        idx = atoi(token);
+    } else {
+        idx = DBGHelper_ntoi(NODE_TYPE(curr_node), token);
+    }
+    if (idx == -1) {
+        printf("Given value is not a field of the current node!\n");
+        return -1;
+    }
+
+    token = strtok(NULL, " ");
+
+    void *val;
+    if (isnumber(token)) {
+        val = (void*)strtol(token, NULL, 10);
+    } else if (ishex(token)) {
+        val = (void*)strtol(token + 2, NULL, 16);
+    } else if (STReq(token, "true")) {
+        val = (void*)1;
+    } else if (STReq(token, "false")) {
+        val = (void*)0;
+    } else {
+        printf("Please specify a value or address!\n");
+        return -1;
+    }
+
+    DBGHelper_setval(curr_node, idx, val);
+
+    // TODO add hist entry
+    hist_item **hist_ptr = DBGHelper_nodehist(NODE_TYPE(curr_node), NODE_HIST(curr_node), idx);
+    hist_item *new_hist = MEMmalloc(sizeof(hist_item));
+    new_hist->val = val;
+    new_hist->rip = (void*)-1;
+    new_hist->action = (size_t)-1;
+    new_hist->next = *hist_ptr;
+    *hist_ptr = new_hist;
+
     return 0;
 }
 
@@ -430,13 +492,13 @@ int comm_goto(char *comm)
                 break;
             }
             curr_node = new_node;
-            printf("\nMoved to child %i (node %s (index %li, addr %p))\n\n", 
+            printf("\nMoved to child %i (node %s (index %li, addr %p))\n\n",
                    idx, DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
             break;
         case 1:
             if (NODE_PARENT(curr_node)) {
                 curr_node = NODE_PARENT(curr_node);
-                printf("\nMoved to parent (node %s (index %li, addr %p))\n\n", 
+                printf("\nMoved to parent (node %s (index %li, addr %p))\n\n",
                        DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
             }
             else
@@ -457,9 +519,9 @@ int comm_goto(char *comm)
                 break;
             }
             curr_node = new_node;
-            printf("\nMoved to %s (node %s (index %li, addr %p))\n\n", 
+            printf("\nMoved to %s (node %s (index %li, addr %p))\n\n",
                    token, DBGHelper_nodename(NODE_TYPE(curr_node)), NODE_ID(curr_node), (void*)curr_node);
-            break;  
+            break;
     }
     fflush(stdout);
     return 0;
@@ -502,7 +564,7 @@ int comm_rern(char *comm)
     if (!CCNstartRestartAt(action)) {
         printf("Invalid action given!\n");
     }
-    printf("Restarting from action %lu (%s). Exiting debugger...\n\n", action, 
+    printf("Restarting from action %lu (%s). Exiting debugger...\n\n", action,
            CCNgetActionFromID(CCNgetActionHist()[action])->name);
     ccndbg_repl_done = 3;
     return 0;

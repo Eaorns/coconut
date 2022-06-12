@@ -778,16 +778,17 @@ void *DBGHelper_getptr(node_st *node, int idx) {
 }
 
 void DBGHelper_setval(node_st *node, int idx, void *val) {
+    void **val_ref = &val;
     switch (NODE_TYPE(node)) {
         case NT_ID:
             switch (idx) {
                 case 0: ID_NEXT(node) = (node_st*)val; break;
-                case 1: ID_ORIG(node) = *(char **)&val; break;
-                case 2: ID_LWR(node) = *(char **)&val; break;
-                case 3: ID_UPR(node) = *(char **)&val; break;
-                case 4: ID_ROW(node) = *(int*)&val; break;
-                case 5: ID_COL_BEGIN(node) = *(int*)&val; break;
-                case 6: ID_COL_END(node) = *(int*)&val; break;
+                case 1: ID_ORIG(node) = *(char **)val_ref; break;
+                case 2: ID_LWR(node) = *(char **)val_ref; break;
+                case 3: ID_UPR(node) = *(char **)val_ref; break;
+                case 4: ID_ROW(node) = *(int*)val_ref; break;
+                case 5: ID_COL_BEGIN(node) = *(int*)val_ref; break;
+                case 6: ID_COL_END(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -799,7 +800,7 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 1: IENUM_NAME(node) = (node_st*)val; break;
                 case 2: IENUM_IPREFIX(node) = (node_st*)val; break;
                 case 3: IENUM_NEXT(node) = (node_st*)val; break;
-                case 4: IENUM_IINFO(node) = *(char **)&val; break;
+                case 4: IENUM_IINFO(node) = *(char **)val_ref; break;
                 default:
                     break;
             }
@@ -811,8 +812,8 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 1: ATTRIBUTE_TYPE_REFERENCE(node) = (node_st*)val; break;
                 case 2: ATTRIBUTE_LIFETIMES(node) = (node_st*)val; break;
                 case 3: ATTRIBUTE_NEXT(node) = (node_st*)val; break;
-                case 4: ATTRIBUTE_TYPE(node) = *(int*)&val; break;
-                case 5: ATTRIBUTE_IN_CONSTRUCTOR(node) = *(int*)&val; break;
+                case 4: ATTRIBUTE_TYPE(node) = *(int*)val_ref; break;
+                case 5: ATTRIBUTE_IN_CONSTRUCTOR(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -823,8 +824,8 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 0: ITRAVDATA_NAME(node) = (node_st*)val; break;
                 case 1: ITRAVDATA_TYPE_REFERENCE(node) = (node_st*)val; break;
                 case 2: ITRAVDATA_NEXT(node) = (node_st*)val; break;
-                case 3: ITRAVDATA_TYPE(node) = *(int*)&val; break;
-                case 4: ITRAVDATA_INCLUDE_FILE(node) = *(char **)&val; break;
+                case 3: ITRAVDATA_TYPE(node) = *(int*)val_ref; break;
+                case 4: ITRAVDATA_INCLUDE_FILE(node) = *(char **)val_ref; break;
                 default:
                     break;
             }
@@ -834,7 +835,7 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
             switch (idx) {
                 case 0: SETOPERATION_LEFT(node) = (node_st*)val; break;
                 case 1: SETOPERATION_RIGHT(node) = (node_st*)val; break;
-                case 2: SETOPERATION_TYPE(node) = *(int*)&val; break;
+                case 2: SETOPERATION_TYPE(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -874,9 +875,9 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 1: CHILD_LIFETIMES(node) = (node_st*)val; break;
                 case 2: CHILD_NEXT(node) = (node_st*)val; break;
                 case 3: CHILD_TYPE_REFERENCE(node) = (node_st*)val; break;
-                case 4: CHILD_TYPE(node) = *(int*)&val; break;
-                case 5: CHILD_IN_CONSTRUCTOR(node) = *(int*)&val; break;
-                case 6: CHILD_IS_MANDATORY(node) = *(int*)&val; break;
+                case 4: CHILD_TYPE(node) = *(int*)val_ref; break;
+                case 5: CHILD_IN_CONSTRUCTOR(node) = *(int*)val_ref; break;
+                case 6: CHILD_IS_MANDATORY(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -885,9 +886,9 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
         case NT_LIFETIME_RANGE:
             switch (idx) {
                 case 0: LIFETIME_RANGE_TARGET(node) = (node_st*)val; break;
-                case 1: LIFETIME_RANGE_INCLUSIVE(node) = *(bool*)&val; break;
-                case 2: LIFETIME_RANGE_ACTION_ID(node) = *(int*)&val; break;
-                case 3: LIFETIME_RANGE_NEXT_ACTION_ID(node) = *(int*)&val; break;
+                case 1: LIFETIME_RANGE_INCLUSIVE(node) = *(bool*)val_ref; break;
+                case 2: LIFETIME_RANGE_ACTION_ID(node) = *(int*)val_ref; break;
+                case 3: LIFETIME_RANGE_NEXT_ACTION_ID(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -898,7 +899,7 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 0: ILIFETIME_BEGIN(node) = (node_st*)val; break;
                 case 1: ILIFETIME_END(node) = (node_st*)val; break;
                 case 2: ILIFETIME_NEXT(node) = (node_st*)val; break;
-                case 3: ILIFETIME_TYPE(node) = *(int*)&val; break;
+                case 3: ILIFETIME_TYPE(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -910,7 +911,7 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 1: INODESET_EXPR(node) = (node_st*)val; break;
                 case 2: INODESET_UNPACKED(node) = (node_st*)val; break;
                 case 3: INODESET_NEXT(node) = (node_st*)val; break;
-                case 4: INODESET_IINFO(node) = *(char **)&val; break;
+                case 4: INODESET_IINFO(node) = *(char **)val_ref; break;
                 default:
                     break;
             }
@@ -923,9 +924,9 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 2: INODE_ICHILDREN(node) = (node_st*)val; break;
                 case 3: INODE_IATTRIBUTES(node) = (node_st*)val; break;
                 case 4: INODE_LIFETIMES(node) = (node_st*)val; break;
-                case 5: INODE_IIFNO(node) = *(char **)&val; break;
-                case 6: INODE_IS_ROOT(node) = *(int*)&val; break;
-                case 7: INODE_INDEX(node) = *(int*)&val; break;
+                case 5: INODE_IIFNO(node) = *(char **)val_ref; break;
+                case 6: INODE_IS_ROOT(node) = *(int*)val_ref; break;
+                case 7: INODE_INDEX(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -937,7 +938,7 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 1: IPASS_IPREFIX(node) = (node_st*)val; break;
                 case 2: IPASS_TARGET_FUNC(node) = (node_st*)val; break;
                 case 3: IPASS_NEXT(node) = (node_st*)val; break;
-                case 4: IPASS_IIFNO(node) = *(char **)&val; break;
+                case 4: IPASS_IIFNO(node) = *(char **)val_ref; break;
                 default:
                     break;
             }
@@ -950,8 +951,8 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 2: ITRAVERSAL_INODES(node) = (node_st*)val; break;
                 case 3: ITRAVERSAL_DATA(node) = (node_st*)val; break;
                 case 4: ITRAVERSAL_NEXT(node) = (node_st*)val; break;
-                case 5: ITRAVERSAL_INDEX(node) = *(int*)&val; break;
-                case 6: ITRAVERSAL_IINFO(node) = *(char **)&val; break;
+                case 5: ITRAVERSAL_INDEX(node) = *(int*)val_ref; break;
+                case 6: ITRAVERSAL_IINFO(node) = *(char **)val_ref; break;
                 default:
                     break;
             }
@@ -964,9 +965,9 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 2: IPHASE_GATE_FUNC(node) = (node_st*)val; break;
                 case 3: IPHASE_IACTIONS(node) = (node_st*)val; break;
                 case 4: IPHASE_NEXT(node) = (node_st*)val; break;
-                case 5: IPHASE_IS_START(node) = *(int*)&val; break;
-                case 6: IPHASE_IS_CYCLE(node) = *(int*)&val; break;
-                case 7: IPHASE_IINFO(node) = *(char **)&val; break;
+                case 5: IPHASE_IS_START(node) = *(int*)val_ref; break;
+                case 6: IPHASE_IS_CYCLE(node) = *(int*)val_ref; break;
+                case 7: IPHASE_IINFO(node) = *(char **)val_ref; break;
                 default:
                     break;
             }
@@ -976,7 +977,7 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
             switch (idx) {
                 case 0: IACTIONS_REFERENCE(node) = (node_st*)val; break;
                 case 1: IACTIONS_NEXT(node) = (node_st*)val; break;
-                case 2: IACTIONS_ACTION_ID(node) = *(int*)&val; break;
+                case 2: IACTIONS_ACTION_ID(node) = *(int*)val_ref; break;
                 default:
                     break;
             }
@@ -991,11 +992,11 @@ void DBGHelper_setval(node_st *node, int idx, void *val) {
                 case 4: AST_INODESETS(node) = (node_st*)val; break;
                 case 5: AST_ENUMS(node) = (node_st*)val; break;
                 case 6: AST_STABLE(node) = (node_st*)val; break;
-                case 7: AST_NUM_TRAVERSALS(node) = *(int*)&val; break;
-                case 8: AST_NUM_NODES(node) = *(int*)&val; break;
+                case 7: AST_NUM_TRAVERSALS(node) = *(int*)val_ref; break;
+                case 8: AST_NUM_NODES(node) = *(int*)val_ref; break;
                 case 9: AST_ROOT_NODE(node) = (node_st*)val; break;
                 case 10: AST_START_PHASE(node) = (node_st*)val; break;
-                case 11: AST_USES_UNSAFE(node) = *(bool*)&val; break;
+                case 11: AST_USES_UNSAFE(node) = *(bool*)val_ref; break;
                 default:
                     break;
             }

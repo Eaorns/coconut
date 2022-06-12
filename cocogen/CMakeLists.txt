@@ -44,4 +44,4 @@ target_include_directories(cocogen PUBLIC "${CMAKE_CURRENT_LIST_DIR}/ccngen" "${
 target_link_libraries(cocogen PUBLIC edit ncurses)
 target_link_libraries(cocogen PUBLIC dl)
 target_link_libraries(cocogen PUBLIC coconut::palm)
-SET(CMAKE_C_FLAGS "-rdynamic")
+SET(CMAKE_C_FLAGS "-rdynamic -Wno-clobbered")
