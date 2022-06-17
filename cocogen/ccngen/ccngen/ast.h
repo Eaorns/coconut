@@ -1,5 +1,6 @@
 #pragma once
 #pragma once
+#define INCLUDE_DEBUGGER
 #include "ccn/ccn_types.h"
 #include "ccngen/enum.h"
 #include <stddef.h>

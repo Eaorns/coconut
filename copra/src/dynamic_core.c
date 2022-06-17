@@ -1,13 +1,16 @@
 #define _GNU_SOURCE
+#include "ccngen/ast.h"
+
 #include "ccn/dynamic_core.h"
-#include "ccn/phase_driver.h"
 #include "ccn/ccn_types.h"
-#include "ccn/ccn_dbg.h"
-#include "palm/watchpoint.h"
+#ifdef INCLUDE_DEBUGGER
+  #include "ccn/phase_driver.h"
+  #include "ccn/ccn_dbg.h"
+  #include "palm/watchpoint.h"
+#endif
 #include <err.h>
 #include <stdio.h>
 
-#include "ccngen/ast.h"
 
 #include "palm/memory.h"
 
@@ -83,10 +86,14 @@ struct ccn_node *TRAVnop(struct ccn_node *arg_node) { return arg_node; }
  */
 struct ccn_node *TRAVchildren(struct ccn_node *arg_node) {
     for (int i = 0; i < NODE_NUMCHILDREN(arg_node); i++) {
+        #ifdef INCLUDE_DEBUGGER
         // check if child has changed, if not do not register to history
         struct ccn_node *res = TRAVopt(NODE_CHILDREN(arg_node)[i]);
         if (res != NODE_CHILDREN(arg_node)[i])
             NODE_CHILDREN(arg_node)[i] = res;
+        #else
+        NODE_CHILDREN(arg_node)[i] = TRAVopt(NODE_CHILDREN(arg_node)[i]);
+        #endif 
     }
     return arg_node;
 }
@@ -118,6 +125,7 @@ struct ccn_node *CCNcopy(struct ccn_node *arg_node) { return TRAVstart(arg_node,
  */
 struct ccn_node *CCNfree(struct ccn_node *arg_node) { return TRAVstart(arg_node, TRAV_free); }
 
+#ifdef INCLUDE_DEBUGGER
 /**
  * Start a debugging session.
  */
@@ -147,3 +155,4 @@ struct ccn_node *CCNdebug(struct ccn_node *arg_node)
     }
     return arg_node;
 }
+#endif

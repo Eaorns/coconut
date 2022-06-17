@@ -5,15 +5,17 @@
 #include "globals.h"
 #include "palm/filesystem.h"
 #include "palm/str.h"
-#include "palm/watchpoint.h"
-#include "palm/watchpointalloc.h"
 #include <ccn/ccn.h>
 #include "palm/dbug.h"
 #include <stddef.h>
 #include <stdio.h>
 #include "ccngen/action_handling.h"
 #include "ccn/action_types.h"
-#include "ccn/ccn_dbg.h"
+#ifdef INCLUDE_DEBUGGER
+  #include "palm/watchpoint.h"
+  #include "palm/watchpointalloc.h"
+  #include "ccn/ccn_dbg.h"
+#endif
 
 struct globals globals;
 
@@ -45,7 +47,9 @@ int main(int argc, char *argv[])
     if (!global_command_line.debug) {
         DBUGoff();
     }
+    #ifdef INCLUDE_DEBUGGER
     executable_name = argv[0];
+    #endif
 
     globals.filename = global_command_line.input_file;
     globals.line_map = HTnew_Int(25);

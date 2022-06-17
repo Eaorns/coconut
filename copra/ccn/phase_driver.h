@@ -2,9 +2,11 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <ucontext.h>
 #include "ccngen/ast.h"
+#ifdef INCLUDE_DEBUGGER
+#include <ucontext.h>
 #include "ccn/action_types.h"
+#endif
 
 enum pd_verbosity {
     PD_V_QUIET = 0,
@@ -16,6 +18,7 @@ enum pd_verbosity {
 void CCNrun(node_st *node);
 void CCNcycleNotify();
 size_t CCNgetCurrentActionId();
+#ifdef INCLUDE_DEBUGGER
 // Start debugger functions
 size_t CCNgetCurrentActionCtr();
 enum ccn_action_id *CCNgetActionHist();
@@ -27,6 +30,7 @@ ucontext_t *CCNgetCrashContext();
 void CCNreenter();
 bool CCNstartRestartAt(size_t action);
 // End debugger functions
+#endif
 void CCNerrorPhase();
 void CCNerrorAction();
 void CCNsetBreakpoint(char *breakpoint);

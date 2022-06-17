@@ -13,23 +13,28 @@
 #include "ccn/action_types.h"
 #include "ccn/dynamic_core.h"
 #include "ccngen/action_handling.h"
-#include "ccngen/debugger_helper.h"
 #include "palm/ctinfo.h"
-#include "palm/watchpoint.h"
-#include "palm/watchpointalloc.h"
 #include "ccn/phase_driver.h"
-#include "ccn/ccn_dbg.h"
+
+#ifdef INCLUDE_DEBUGGER
+  #include "ccngen/debugger_helper.h"
+  #include "palm/watchpoint.h"
+  #include "palm/watchpointalloc.h"
+  #include "ccn/ccn_dbg.h"
+#endif
 
 #define ACTION_HIST_REALLOC_AMT 32
 
 struct phase_driver {
     size_t level;
     size_t action_id;
+    #ifdef INCLUDE_DEBUGGER
     // Begin used by debugger
     size_t action_ctr;
     size_t action_ctr_nocycle;
     struct ccn_node *root_node;
     // End used by debugger
+    #endif
     size_t cycle_iter;
     size_t max_cycles;
     size_t breakpoint_id;
@@ -42,11 +47,11 @@ struct phase_driver {
     char *breakpoint;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct dispatch_hist {
     struct phase_driver driver;
     struct ccn_node *node; 
 };
-
 struct debugger_data {
     enum ccn_action_id *action_hist;
     size_t *nocycle_ctr_hist;
@@ -63,8 +68,6 @@ struct debugger_data {
     size_t restoring_callstack;
 };
 
-
-
 static struct debugger_data debugger_data = {
     .action_hist = NULL,
     .nocycle_ctr_hist = NULL,
@@ -78,12 +81,15 @@ static struct debugger_data debugger_data = {
     .restarting_at = (size_t)-1,
     .restoring_callstack = (size_t)-1
 };
+#endif
 
 static struct phase_driver phase_driver = {
     .level = 0,
     .action_id = 0,
+    #ifdef INCLUDE_DEBUGGER
     .action_ctr = 0,
     .action_ctr_nocycle = 0,
+    #endif
     .cycle_iter = 0,
     .breakpoint_id = 0,
     .max_cycles = 100,
@@ -98,6 +104,7 @@ static struct phase_driver phase_driver = {
 
 static void resetPhaseDriver()
 {
+    #ifdef INCLUDE_DEBUGGER
     debugger_data.action_hist = MEMfree(debugger_data.action_hist);
     debugger_data.nocycle_ctr_hist = MEMfree(debugger_data.nocycle_ctr_hist);
     debugger_data.dispatch_hist = MEMfree(debugger_data.dispatch_hist);
@@ -109,11 +116,14 @@ static void resetPhaseDriver()
     debugger_data.reentering = false;
     debugger_data.restarting_at = (size_t)-1;
     debugger_data.restoring_callstack = (size_t)-1;
+    #endif
     
     phase_driver.level = 0;
     phase_driver.action_id = 0;
+    #ifdef INCLUDE_DEBUGGER
     phase_driver.action_ctr = 0;
     phase_driver.action_ctr_nocycle = 0;
+    #endif
     phase_driver.cycle_iter = 0;
     phase_driver.current_phase = NULL;
     phase_driver.fixed_point = false;
@@ -127,6 +137,7 @@ extern void BreakpointHandler(node_st *node);
 
 struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype root_type, struct ccn_node *node,
                           bool is_root) {
+    #ifdef INCLUDE_DEBUGGER
     if (debugger_data.restoring_callstack != (size_t)-1) {
         if (++phase_driver.action_ctr_nocycle < debugger_data.restoring_callstack) {
             bool phase_error = false;
@@ -190,6 +201,9 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
         if (debugger_data.restarting_at != (size_t)-1)
             return node;
     }
+    #else
+    phase_driver.action_id++;
+    #endif
 
     // Needed to break after a phase with action ids.
     size_t start_id = phase_driver.action_id;
@@ -242,7 +256,11 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
         BreakpointHandler(node);
         exit(0);
     }
+    #ifdef INCLUDE_DEBUGGER
     if (debugger_data.restarting_at == (size_t)-1 && action->type == CCN_ACTION_PHASE && phase_driver.verbosity > PD_V_QUIET) {
+    #else
+    if (action->type == CCN_ACTION_PHASE && phase_driver.verbosity > PD_V_QUIET) {
+    #endif
         fprintf(stderr, "<< %s\n", action->name);
     }
 
@@ -317,32 +335,50 @@ struct ccn_node *StartPhase(struct ccn_phase *phase, char *phase_name, struct cc
     phase_driver.level++;
     bool cycle = phase->is_cycle;
     uint64_t curr_action_id = phase_driver.action_id;
+    #ifdef INCLUDE_DEBUGGER
     size_t curr_action_ctr_nocycle = phase_driver.action_ctr_nocycle;
+    #endif
 
     do {
         // If we cycle around, reset the action id.
         phase_driver.fixed_point = true;
         phase_driver.action_id = curr_action_id;
+        #ifdef INCLUDE_DEBUGGER
         phase_driver.action_ctr_nocycle = curr_action_ctr_nocycle;
+        #endif
         size_t action_counter = 0;
         enum ccn_action_id action_id = phase->action_table[action_counter];
-        while (action_id != CCNAC_ID_NULL && debugger_data.restarting_at == (size_t)-1) {
+        #ifdef INCLUDE_DEBUGGER
+        while (action_id != CCNAC_ID_NULL && debugger_data.restarting_at == (size_t)-1)
+        #else
+        while (action_id != CCNAC_ID_NULL)
+        #endif
+        {
             struct ccn_action *action = CCNgetActionFromID(action_id);
             node = CCNdispatchAction(action, phase->root_type, node, false);
             action_counter++;
             action_id = phase->action_table[action_counter];
         }
+        #ifdef INCLUDE_DEBUGGER
         if (debugger_data.restarting_at == (size_t)-1)
+        #endif
             phase_driver.cycle_iter++;
-    } while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles && 
+    }
+    #ifdef INCLUDE_DEBUGGER
+    while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles && 
             !(phase_driver.fixed_point) && debugger_data.restarting_at == (size_t)-1);
+    #else
+    while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles && !(phase_driver.fixed_point));
+    #endif
 
     if (phase_driver.phase_error) {
         fprintf(stderr, "[coconut] Phase error received. Stopping...\n");
         CTIabortCompilation();
     }
 
+    #ifdef INCLUDE_DEBUGGER
     if (debugger_data.restarting_at == (size_t)-1)
+    #endif
         phase_driver.cycle_iter = 0;
     phase_driver.level--;
 
@@ -421,6 +457,7 @@ void CCNsetTreeCheck(bool enable)
     phase_driver.tree_check = enable;
 }
 
+#ifdef INCLUDE_DEBUGGER
 void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void *vcontext)
 {
     if (debugger_data.segfaulting) {
@@ -454,6 +491,7 @@ void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void
     // debugger_data.restoring_callstack = phase_driver.action_ctr;
     setcontext(&(debugger_data.curr_context));
 }
+#endif
 
 /**
  * Perform an invocation of your compiler.
@@ -461,13 +499,17 @@ void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void
  */
 void CCNrun(struct ccn_node *node)
 {
+    #ifdef INCLUDE_DEBUGGER
     /* Register SIGSEGV handler */
     struct sigaction actsegv = { 0 };
     actsegv.sa_flags = SA_SIGINFO;
     actsegv.sa_sigaction = &sighandler_sigsegv;
     sigaction(SIGSEGV, &actsegv, NULL);
+    #endif
 
     resetPhaseDriver();
+
+    #ifdef INCLUDE_DEBUGGER
     watchpoint_init();
     wpalloc_init();
 
@@ -493,12 +535,19 @@ void CCNrun(struct ccn_node *node)
     } while (debugger_data.restarting_at != (size_t)-1);
     
     watchpoint_fini();
+    #else
+    node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
+    #endif
+
     TRAVstart(node, TRAV_free);
+
+    #ifdef INCLUDE_DEBUGGER
     wpalloc_fini();
     MEMfree(debugger_data.action_hist);
     MEMfree(debugger_data.nocycle_ctr_hist);
     MEMfree(debugger_data.dispatch_hist);
     MEMqueueCleanup(0, (size_t)-1);
+    #endif
 }
 
 size_t CCNgetCurrentActionId()
@@ -506,6 +555,7 @@ size_t CCNgetCurrentActionId()
     return phase_driver.action_id;
 }
 
+#ifdef INCLUDE_DEBUGGER
 size_t CCNgetCurrentActionCtr()
 {
     return phase_driver.action_ctr;
@@ -554,6 +604,7 @@ bool CCNstartRestartAt(size_t action)
     debugger_data.restarting_at = action;
     return true;
 }
+#endif
 
 static
 size_t ShowTree(struct ccn_action *curr, size_t id, int indent)

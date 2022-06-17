@@ -23,6 +23,7 @@ void InitGlobalOptions() {
     global_command_line.backend = NULL;
     global_command_line.gen_dir = NULL;
     global_command_line.debug = false;
+    global_command_line.include_debugger = false;
 }
 
 static
@@ -55,6 +56,7 @@ void Usage(char *program) {
            "typed or dynamic(default=dynamic).\n");
     printf("  --show-ast                   Pretty print the ast at end of compilation\n");
     printf("  --show-structure             Pretty print the structure of the compiler.\n");
+    printf("  --include-debugger/-d        Generate debugger code\n");
 }
 
 static
@@ -80,6 +82,7 @@ void CLprocessArgs(int argc, char *argv[]) {
         {"breakpoint", required_argument, 0, 33},
         {"show-structure", no_argument, 0, 34},
         {"debug", no_argument, 0, 35},
+        {"include-debugger", no_argument, 0, 'd'},
         {0, 0, 0, 0}};
 
     int option_index;
@@ -135,6 +138,9 @@ void CLprocessArgs(int argc, char *argv[]) {
             exit(0);
         case 35:
             global_command_line.debug = true;
+            break;
+        case 'd':
+            global_command_line.include_debugger = true;
             break;
         case 'h':
             Usage(argv[0]);

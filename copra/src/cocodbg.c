@@ -17,6 +17,8 @@
 #include "palm/memory.h"
 #include "palm/watchpoint.h"
 
+#ifdef INCLUDE_DEBUGGER
+
 #define ANSI_COLOR_BLACK    "\x1b[30m"
 #define ANSI_COLOR_RED      "\x1b[31m"
 #define ANSI_COLOR_BRED     "\x1b[91m"
@@ -596,3 +598,5 @@ int comm_help(char *comm __attribute__((unused)))
     printf("\n");
     return 0;
 }
+
+#endif
