@@ -69,6 +69,7 @@ node_st *ASTid(char * orig, char * lwr, char * Upr) {
     NODE_TYPE(node) = NT_ID;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_id = MEMcalloc(sizeof(struct NODE_HIST_ID));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(ID_NEXT(node)), &wphandler, &(HIST_ID(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(ID_ORIG(node)), &wphandler, &(HIST_ID(NODE_HIST(node))->hist.hist_items.orig));
     watchpoint_add(&(ID_LWR(node)), &wphandler, &(HIST_ID(NODE_HIST(node))->hist.hist_items.lwr));
@@ -76,6 +77,7 @@ node_st *ASTid(char * orig, char * lwr, char * Upr) {
     watchpoint_add(&(ID_ROW(node)), &wphandler, &(HIST_ID(NODE_HIST(node))->hist.hist_items.row));
     watchpoint_add(&(ID_COL_BEGIN(node)), &wphandler, &(HIST_ID(NODE_HIST(node))->hist.hist_items.col_begin));
     watchpoint_add(&(ID_COL_END(node)), &wphandler, &(HIST_ID(NODE_HIST(node))->hist.hist_items.col_end));
+    #endif
     #endif
     ID_NEXT(node) = NULL;
     ID_ORIG(node) = orig;
@@ -98,11 +100,13 @@ node_st *ASTienum(node_st *vals, node_st *name, node_st *iprefix, char * iinfo) 
     NODE_TYPE(node) = NT_IENUM;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_ienum = MEMcalloc(sizeof(struct NODE_HIST_IENUM));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(IENUM_VALS(node)), &wphandler, &(HIST_IENUM(NODE_HIST(node))->hist.hist_items.vals));
     watchpoint_add(&(IENUM_NAME(node)), &wphandler, &(HIST_IENUM(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(IENUM_IPREFIX(node)), &wphandler, &(HIST_IENUM(NODE_HIST(node))->hist.hist_items.iprefix));
     watchpoint_add(&(IENUM_NEXT(node)), &wphandler, &(HIST_IENUM(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(IENUM_IINFO(node)), &wphandler, &(HIST_IENUM(NODE_HIST(node))->hist.hist_items.iinfo));
+    #endif
     #endif
     IENUM_VALS(node) = vals;
     IENUM_NAME(node) = name;
@@ -123,12 +127,14 @@ node_st *ASTattribute() {
     NODE_TYPE(node) = NT_ATTRIBUTE;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_attribute = MEMcalloc(sizeof(struct NODE_HIST_ATTRIBUTE));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(ATTRIBUTE_NAME(node)), &wphandler, &(HIST_ATTRIBUTE(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(ATTRIBUTE_TYPE_REFERENCE(node)), &wphandler, &(HIST_ATTRIBUTE(NODE_HIST(node))->hist.hist_items.type_reference));
     watchpoint_add(&(ATTRIBUTE_LIFETIMES(node)), &wphandler, &(HIST_ATTRIBUTE(NODE_HIST(node))->hist.hist_items.lifetimes));
     watchpoint_add(&(ATTRIBUTE_NEXT(node)), &wphandler, &(HIST_ATTRIBUTE(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(ATTRIBUTE_TYPE(node)), &wphandler, &(HIST_ATTRIBUTE(NODE_HIST(node))->hist.hist_items.type));
     watchpoint_add(&(ATTRIBUTE_IN_CONSTRUCTOR(node)), &wphandler, &(HIST_ATTRIBUTE(NODE_HIST(node))->hist.hist_items.in_constructor));
+    #endif
     #endif
     ATTRIBUTE_NAME(node) = NULL;
     ATTRIBUTE_TYPE_REFERENCE(node) = NULL;
@@ -150,11 +156,13 @@ node_st *ASTitravdata(node_st *name) {
     NODE_TYPE(node) = NT_ITRAVDATA;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_itravdata = MEMcalloc(sizeof(struct NODE_HIST_ITRAVDATA));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(ITRAVDATA_NAME(node)), &wphandler, &(HIST_ITRAVDATA(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(ITRAVDATA_TYPE_REFERENCE(node)), &wphandler, &(HIST_ITRAVDATA(NODE_HIST(node))->hist.hist_items.type_reference));
     watchpoint_add(&(ITRAVDATA_NEXT(node)), &wphandler, &(HIST_ITRAVDATA(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(ITRAVDATA_TYPE(node)), &wphandler, &(HIST_ITRAVDATA(NODE_HIST(node))->hist.hist_items.type));
     watchpoint_add(&(ITRAVDATA_INCLUDE_FILE(node)), &wphandler, &(HIST_ITRAVDATA(NODE_HIST(node))->hist.hist_items.include_file));
+    #endif
     #endif
     ITRAVDATA_NAME(node) = name;
     ITRAVDATA_TYPE_REFERENCE(node) = NULL;
@@ -175,9 +183,11 @@ node_st *ASTsetoperation(node_st *left, node_st *right, enum setoperation_type t
     NODE_TYPE(node) = NT_SETOPERATION;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_setoperation = MEMcalloc(sizeof(struct NODE_HIST_SETOPERATION));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(SETOPERATION_LEFT(node)), &wphandler, &(HIST_SETOPERATION(NODE_HIST(node))->hist.hist_items.left));
     watchpoint_add(&(SETOPERATION_RIGHT(node)), &wphandler, &(HIST_SETOPERATION(NODE_HIST(node))->hist.hist_items.right));
     watchpoint_add(&(SETOPERATION_TYPE(node)), &wphandler, &(HIST_SETOPERATION(NODE_HIST(node))->hist.hist_items.type));
+    #endif
     #endif
     SETOPERATION_LEFT(node) = left;
     SETOPERATION_RIGHT(node) = right;
@@ -196,9 +206,11 @@ node_st *ASTsetliteral(node_st *reference) {
     NODE_TYPE(node) = NT_SETLITERAL;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_setliteral = MEMcalloc(sizeof(struct NODE_HIST_SETLITERAL));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(SETLITERAL_REFERENCE(node)), &wphandler, &(HIST_SETLITERAL(NODE_HIST(node))->hist.hist_items.reference));
     watchpoint_add(&(SETLITERAL_LEFT(node)), &wphandler, &(HIST_SETLITERAL(NODE_HIST(node))->hist.hist_items.left));
     watchpoint_add(&(SETLITERAL_RIGHT(node)), &wphandler, &(HIST_SETLITERAL(NODE_HIST(node))->hist.hist_items.right));
+    #endif
     #endif
     SETLITERAL_REFERENCE(node) = reference;
     SETLITERAL_LEFT(node) = NULL;
@@ -217,7 +229,9 @@ node_st *ASTsetreference() {
     NODE_TYPE(node) = NT_SETREFERENCE;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_setreference = MEMcalloc(sizeof(struct NODE_HIST_SETREFERENCE));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(SETREFERENCE_REFERENCE(node)), &wphandler, &(HIST_SETREFERENCE(NODE_HIST(node))->hist.hist_items.reference));
+    #endif
     #endif
     SETREFERENCE_REFERENCE(node) = NULL;
     NODE_NUMCHILDREN(node) = 1;
@@ -234,9 +248,11 @@ node_st *ASTste() {
     NODE_TYPE(node) = NT_STE;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_ste = MEMcalloc(sizeof(struct NODE_HIST_STE));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(STE_NEXT(node)), &wphandler, &(HIST_STE(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(STE_KEY(node)), &wphandler, &(HIST_STE(NODE_HIST(node))->hist.hist_items.key));
     watchpoint_add(&(STE_VALUE(node)), &wphandler, &(HIST_STE(NODE_HIST(node))->hist.hist_items.value));
+    #endif
     #endif
     STE_NEXT(node) = NULL;
     STE_KEY(node) = NULL;
@@ -255,6 +271,7 @@ node_st *ASTchild(node_st *name) {
     NODE_TYPE(node) = NT_CHILD;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_child = MEMcalloc(sizeof(struct NODE_HIST_CHILD));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(CHILD_NAME(node)), &wphandler, &(HIST_CHILD(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(CHILD_LIFETIMES(node)), &wphandler, &(HIST_CHILD(NODE_HIST(node))->hist.hist_items.lifetimes));
     watchpoint_add(&(CHILD_NEXT(node)), &wphandler, &(HIST_CHILD(NODE_HIST(node))->hist.hist_items.next));
@@ -262,6 +279,7 @@ node_st *ASTchild(node_st *name) {
     watchpoint_add(&(CHILD_TYPE(node)), &wphandler, &(HIST_CHILD(NODE_HIST(node))->hist.hist_items.type));
     watchpoint_add(&(CHILD_IN_CONSTRUCTOR(node)), &wphandler, &(HIST_CHILD(NODE_HIST(node))->hist.hist_items.in_constructor));
     watchpoint_add(&(CHILD_IS_MANDATORY(node)), &wphandler, &(HIST_CHILD(NODE_HIST(node))->hist.hist_items.is_mandatory));
+    #endif
     #endif
     CHILD_NAME(node) = name;
     CHILD_LIFETIMES(node) = NULL;
@@ -284,10 +302,12 @@ node_st *ASTlifetime_range() {
     NODE_TYPE(node) = NT_LIFETIME_RANGE;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_lifetime_range = MEMcalloc(sizeof(struct NODE_HIST_LIFETIME_RANGE));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(LIFETIME_RANGE_TARGET(node)), &wphandler, &(HIST_LIFETIME_RANGE(NODE_HIST(node))->hist.hist_items.target));
     watchpoint_add(&(LIFETIME_RANGE_INCLUSIVE(node)), &wphandler, &(HIST_LIFETIME_RANGE(NODE_HIST(node))->hist.hist_items.inclusive));
     watchpoint_add(&(LIFETIME_RANGE_ACTION_ID(node)), &wphandler, &(HIST_LIFETIME_RANGE(NODE_HIST(node))->hist.hist_items.action_id));
     watchpoint_add(&(LIFETIME_RANGE_NEXT_ACTION_ID(node)), &wphandler, &(HIST_LIFETIME_RANGE(NODE_HIST(node))->hist.hist_items.next_action_id));
+    #endif
     #endif
     LIFETIME_RANGE_TARGET(node) = NULL;
     LIFETIME_RANGE_INCLUSIVE(node) = false;
@@ -307,10 +327,12 @@ node_st *ASTilifetime() {
     NODE_TYPE(node) = NT_ILIFETIME;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_ilifetime = MEMcalloc(sizeof(struct NODE_HIST_ILIFETIME));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(ILIFETIME_BEGIN(node)), &wphandler, &(HIST_ILIFETIME(NODE_HIST(node))->hist.hist_items.begin));
     watchpoint_add(&(ILIFETIME_END(node)), &wphandler, &(HIST_ILIFETIME(NODE_HIST(node))->hist.hist_items.end));
     watchpoint_add(&(ILIFETIME_NEXT(node)), &wphandler, &(HIST_ILIFETIME(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(ILIFETIME_TYPE(node)), &wphandler, &(HIST_ILIFETIME(NODE_HIST(node))->hist.hist_items.type));
+    #endif
     #endif
     ILIFETIME_BEGIN(node) = NULL;
     ILIFETIME_END(node) = NULL;
@@ -330,11 +352,13 @@ node_st *ASTinodeset() {
     NODE_TYPE(node) = NT_INODESET;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_inodeset = MEMcalloc(sizeof(struct NODE_HIST_INODESET));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(INODESET_NAME(node)), &wphandler, &(HIST_INODESET(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(INODESET_EXPR(node)), &wphandler, &(HIST_INODESET(NODE_HIST(node))->hist.hist_items.expr));
     watchpoint_add(&(INODESET_UNPACKED(node)), &wphandler, &(HIST_INODESET(NODE_HIST(node))->hist.hist_items.unpacked));
     watchpoint_add(&(INODESET_NEXT(node)), &wphandler, &(HIST_INODESET(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(INODESET_IINFO(node)), &wphandler, &(HIST_INODESET(NODE_HIST(node))->hist.hist_items.iinfo));
+    #endif
     #endif
     INODESET_NAME(node) = NULL;
     INODESET_EXPR(node) = NULL;
@@ -355,6 +379,7 @@ node_st *ASTinode(node_st *name, char * iifno) {
     NODE_TYPE(node) = NT_INODE;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_inode = MEMcalloc(sizeof(struct NODE_HIST_INODE));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(INODE_NAME(node)), &wphandler, &(HIST_INODE(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(INODE_NEXT(node)), &wphandler, &(HIST_INODE(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(INODE_ICHILDREN(node)), &wphandler, &(HIST_INODE(NODE_HIST(node))->hist.hist_items.ichildren));
@@ -363,6 +388,7 @@ node_st *ASTinode(node_st *name, char * iifno) {
     watchpoint_add(&(INODE_IIFNO(node)), &wphandler, &(HIST_INODE(NODE_HIST(node))->hist.hist_items.iifno));
     watchpoint_add(&(INODE_IS_ROOT(node)), &wphandler, &(HIST_INODE(NODE_HIST(node))->hist.hist_items.is_root));
     watchpoint_add(&(INODE_INDEX(node)), &wphandler, &(HIST_INODE(NODE_HIST(node))->hist.hist_items.index));
+    #endif
     #endif
     INODE_NAME(node) = name;
     INODE_NEXT(node) = NULL;
@@ -386,11 +412,13 @@ node_st *ASTipass(node_st *name, char * iifno) {
     NODE_TYPE(node) = NT_IPASS;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_ipass = MEMcalloc(sizeof(struct NODE_HIST_IPASS));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(IPASS_NAME(node)), &wphandler, &(HIST_IPASS(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(IPASS_IPREFIX(node)), &wphandler, &(HIST_IPASS(NODE_HIST(node))->hist.hist_items.iprefix));
     watchpoint_add(&(IPASS_TARGET_FUNC(node)), &wphandler, &(HIST_IPASS(NODE_HIST(node))->hist.hist_items.target_func));
     watchpoint_add(&(IPASS_NEXT(node)), &wphandler, &(HIST_IPASS(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(IPASS_IIFNO(node)), &wphandler, &(HIST_IPASS(NODE_HIST(node))->hist.hist_items.iifno));
+    #endif
     #endif
     IPASS_NAME(node) = name;
     IPASS_IPREFIX(node) = NULL;
@@ -411,6 +439,7 @@ node_st *ASTitraversal(node_st *name) {
     NODE_TYPE(node) = NT_ITRAVERSAL;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_itraversal = MEMcalloc(sizeof(struct NODE_HIST_ITRAVERSAL));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(ITRAVERSAL_NAME(node)), &wphandler, &(HIST_ITRAVERSAL(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(ITRAVERSAL_IPREFIX(node)), &wphandler, &(HIST_ITRAVERSAL(NODE_HIST(node))->hist.hist_items.iprefix));
     watchpoint_add(&(ITRAVERSAL_INODES(node)), &wphandler, &(HIST_ITRAVERSAL(NODE_HIST(node))->hist.hist_items.inodes));
@@ -418,6 +447,7 @@ node_st *ASTitraversal(node_st *name) {
     watchpoint_add(&(ITRAVERSAL_NEXT(node)), &wphandler, &(HIST_ITRAVERSAL(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(ITRAVERSAL_INDEX(node)), &wphandler, &(HIST_ITRAVERSAL(NODE_HIST(node))->hist.hist_items.index));
     watchpoint_add(&(ITRAVERSAL_IINFO(node)), &wphandler, &(HIST_ITRAVERSAL(NODE_HIST(node))->hist.hist_items.iinfo));
+    #endif
     #endif
     ITRAVERSAL_NAME(node) = name;
     ITRAVERSAL_IPREFIX(node) = NULL;
@@ -440,6 +470,7 @@ node_st *ASTiphase(node_st *name, int is_start) {
     NODE_TYPE(node) = NT_IPHASE;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_iphase = MEMcalloc(sizeof(struct NODE_HIST_IPHASE));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(IPHASE_NAME(node)), &wphandler, &(HIST_IPHASE(NODE_HIST(node))->hist.hist_items.name));
     watchpoint_add(&(IPHASE_IPREFIX(node)), &wphandler, &(HIST_IPHASE(NODE_HIST(node))->hist.hist_items.iprefix));
     watchpoint_add(&(IPHASE_GATE_FUNC(node)), &wphandler, &(HIST_IPHASE(NODE_HIST(node))->hist.hist_items.gate_func));
@@ -448,6 +479,7 @@ node_st *ASTiphase(node_st *name, int is_start) {
     watchpoint_add(&(IPHASE_IS_START(node)), &wphandler, &(HIST_IPHASE(NODE_HIST(node))->hist.hist_items.is_start));
     watchpoint_add(&(IPHASE_IS_CYCLE(node)), &wphandler, &(HIST_IPHASE(NODE_HIST(node))->hist.hist_items.is_cycle));
     watchpoint_add(&(IPHASE_IINFO(node)), &wphandler, &(HIST_IPHASE(NODE_HIST(node))->hist.hist_items.iinfo));
+    #endif
     #endif
     IPHASE_NAME(node) = name;
     IPHASE_IPREFIX(node) = NULL;
@@ -471,9 +503,11 @@ node_st *ASTiactions() {
     NODE_TYPE(node) = NT_IACTIONS;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_iactions = MEMcalloc(sizeof(struct NODE_HIST_IACTIONS));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(IACTIONS_REFERENCE(node)), &wphandler, &(HIST_IACTIONS(NODE_HIST(node))->hist.hist_items.reference));
     watchpoint_add(&(IACTIONS_NEXT(node)), &wphandler, &(HIST_IACTIONS(NODE_HIST(node))->hist.hist_items.next));
     watchpoint_add(&(IACTIONS_ACTION_ID(node)), &wphandler, &(HIST_IACTIONS(NODE_HIST(node))->hist.hist_items.action_id));
+    #endif
     #endif
     IACTIONS_REFERENCE(node) = NULL;
     IACTIONS_NEXT(node) = NULL;
@@ -492,6 +526,7 @@ node_st *ASTast() {
     NODE_TYPE(node) = NT_AST;
     #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node)->data.NH_ast = MEMcalloc(sizeof(struct NODE_HIST_AST));
+    #ifdef INCLUDE_WATCHPOINTS
     watchpoint_add(&(AST_IPHASES(node)), &wphandler, &(HIST_AST(NODE_HIST(node))->hist.hist_items.iphases));
     watchpoint_add(&(AST_ITRAVERSALS(node)), &wphandler, &(HIST_AST(NODE_HIST(node))->hist.hist_items.itraversals));
     watchpoint_add(&(AST_IPASSES(node)), &wphandler, &(HIST_AST(NODE_HIST(node))->hist.hist_items.ipasses));
@@ -504,6 +539,7 @@ node_st *ASTast() {
     watchpoint_add(&(AST_ROOT_NODE(node)), &wphandler, &(HIST_AST(NODE_HIST(node))->hist.hist_items.root_node));
     watchpoint_add(&(AST_START_PHASE(node)), &wphandler, &(HIST_AST(NODE_HIST(node))->hist.hist_items.start_phase));
     watchpoint_add(&(AST_USES_UNSAFE(node)), &wphandler, &(HIST_AST(NODE_HIST(node))->hist.hist_items.uses_unsafe));
+    #endif
     #endif
     AST_IPHASES(node) = NULL;
     AST_ITRAVERSALS(node) = NULL;

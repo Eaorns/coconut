@@ -16,6 +16,7 @@ struct command_line {
     char *backend;
     char *gen_dir;
     bool include_debugger;
+    bool no_watchpoints;
 };
 
 extern struct command_line global_command_line;

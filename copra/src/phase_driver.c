@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 
 #include "ccn/action_types.h"
 #include "ccn/dynamic_core.h"
@@ -50,7 +51,7 @@ struct phase_driver {
 #ifdef INCLUDE_DEBUGGER
 struct dispatch_hist {
     struct phase_driver driver;
-    struct ccn_node *node; 
+    struct ccn_node *node;
 };
 struct debugger_data {
     enum ccn_action_id *action_hist;
@@ -117,7 +118,7 @@ static void resetPhaseDriver()
     debugger_data.restarting_at = (size_t)-1;
     debugger_data.restoring_callstack = (size_t)-1;
     #endif
-    
+
     phase_driver.level = 0;
     phase_driver.action_id = 0;
     #ifdef INCLUDE_DEBUGGER
@@ -173,14 +174,14 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
     }
 
     MEMsetAction(phase_driver.action_ctr);
-    
+
     phase_driver.root_node = node;
     if (debugger_data.hist_size <= phase_driver.action_ctr) {
         debugger_data.hist_size += ACTION_HIST_REALLOC_AMT;
         // TODO replace realloc with memory.h function
-        debugger_data.action_hist = realloc(debugger_data.action_hist, debugger_data.hist_size * sizeof(enum ccn_action_id));  
-        debugger_data.nocycle_ctr_hist = realloc(debugger_data.nocycle_ctr_hist, debugger_data.hist_size * sizeof(size_t));  
-        debugger_data.dispatch_hist = realloc(debugger_data.dispatch_hist, debugger_data.hist_size * sizeof(struct dispatch_hist));  
+        debugger_data.action_hist = realloc(debugger_data.action_hist, debugger_data.hist_size * sizeof(enum ccn_action_id));
+        debugger_data.nocycle_ctr_hist = realloc(debugger_data.nocycle_ctr_hist, debugger_data.hist_size * sizeof(size_t));
+        debugger_data.dispatch_hist = realloc(debugger_data.dispatch_hist, debugger_data.hist_size * sizeof(struct dispatch_hist));
     }
     debugger_data.action_hist[phase_driver.action_ctr] = action->action_id;
     debugger_data.nocycle_ctr_hist[phase_driver.action_ctr] = phase_driver.action_ctr_nocycle;
@@ -197,7 +198,7 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
             CCNdebug(debugger_data.err_node);
         else
             CCNdebug(phase_driver.root_node);
-        
+
         if (debugger_data.restarting_at != (size_t)-1)
             return node;
     }
@@ -223,7 +224,7 @@ struct ccn_node *CCNdispatchAction(struct ccn_action *action, enum ccn_nodetype 
             CTIabortOnError();
         }
     }
-    
+
     bool phase_error = false;
     switch (action->type) {
     case CCN_ACTION_PASS:
@@ -365,7 +366,7 @@ struct ccn_node *StartPhase(struct ccn_phase *phase, char *phase_name, struct cc
             phase_driver.cycle_iter++;
     }
     #ifdef INCLUDE_DEBUGGER
-    while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles && 
+    while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles &&
             !(phase_driver.fixed_point) && debugger_data.restarting_at == (size_t)-1);
     #else
     while(cycle && phase_driver.cycle_iter < phase_driver.max_cycles && !(phase_driver.fixed_point));
@@ -467,7 +468,7 @@ void sighandler_sigsegv(int signo __attribute__((unused)), siginfo_t *info, void
         sigaction(SIGSEGV, &actsegv, NULL);
         return;
     }
-    
+
     debugger_data.segfaulting = true;
 
     memcpy(&(debugger_data.crash_context), vcontext, sizeof(ucontext_t));
@@ -509,6 +510,9 @@ void CCNrun(struct ccn_node *node)
 
     resetPhaseDriver();
 
+    time_t start, end;
+    start = clock();
+
     #ifdef INCLUDE_DEBUGGER
     watchpoint_init();
     wpalloc_init();
@@ -533,7 +537,7 @@ void CCNrun(struct ccn_node *node)
 
         node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
     } while (debugger_data.restarting_at != (size_t)-1);
-    
+
     watchpoint_fini();
     #else
     node = CCNdispatchAction(CCNgetActionFromID(CCN_ROOT_ACTION), CCN_ROOT_TYPE, node, false);
@@ -542,12 +546,17 @@ void CCNrun(struct ccn_node *node)
     TRAVstart(node, TRAV_free);
 
     #ifdef INCLUDE_DEBUGGER
+    free_bin();
     wpalloc_fini();
     MEMfree(debugger_data.action_hist);
     MEMfree(debugger_data.nocycle_ctr_hist);
     MEMfree(debugger_data.dispatch_hist);
     MEMqueueCleanup(0, (size_t)-1);
     #endif
+
+    end = clock();
+
+    fprintf(stderr, "  (%lu, %f)\n", end - start, (double)(end - start) / CLOCKS_PER_SEC);
 }
 
 size_t CCNgetCurrentActionId()
@@ -586,7 +595,7 @@ ucontext_t *CCNgetCurrContext()
     return &(debugger_data.curr_context);
 }
 
-ucontext_t *CCNgetCrashContext() 
+ucontext_t *CCNgetCrashContext()
 {
     return &(debugger_data.crash_context);
 }

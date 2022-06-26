@@ -62,10 +62,12 @@ node_st *DGNCinode(node_st *node)
         OUT_FIELD("NODE_TYPE(node) = %s%s", "NT_", ID_UPR(INODE_NAME(node)));
         OUT("#ifdef INCLUDE_DEBUGGER\n");
         OUT_FIELD("NODE_HIST(node)->data.NH_%s = MEMcalloc(sizeof(struct NODE_HIST_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
+        OUT("#ifdef INCLUDE_WATCHPOINTS\n");
 
         generating_watchpoints = true;
         TRAVopt(INODE_ICHILDREN(node));
         TRAVopt(INODE_IATTRIBUTES(node));
+        OUT("#endif\n");
         OUT("#endif\n");
         generating_watchpoints = false;
         TRAVopt(INODE_ICHILDREN(node));
@@ -101,7 +103,7 @@ node_st *DGNCchild(node_st *node)
             OUT_FIELD("%s_%s(node) = NULL", node_name_upr, ID_UPR(CHILD_NAME(node)));
         }
     }
-    
+
     TRAVchildren(node);
     return node;
 }
@@ -119,7 +121,7 @@ node_st *DGNCattribute(node_st *node)
             OUT_FIELD("%s_%s(node) = %s", node_name_upr, ID_UPR(ATTRIBUTE_NAME(node)), FMTattributeDefaultVal(ATTRIBUTE_TYPE(node)));
         }
     }
-    
+
     TRAVchildren(node);
     return node;
 }

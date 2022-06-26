@@ -24,6 +24,7 @@ void InitGlobalOptions() {
     global_command_line.gen_dir = NULL;
     global_command_line.debug = false;
     global_command_line.include_debugger = false;
+    global_command_line.no_watchpoints = false;
 }
 
 static
@@ -57,6 +58,7 @@ void Usage(char *program) {
     printf("  --show-ast                   Pretty print the ast at end of compilation\n");
     printf("  --show-structure             Pretty print the structure of the compiler.\n");
     printf("  --include-debugger/-d        Generate debugger code\n");
+    printf("  --no-watchpoints/-w          Generate debugger code with watchpoints disabled\n");
 }
 
 static
@@ -83,6 +85,7 @@ void CLprocessArgs(int argc, char *argv[]) {
         {"show-structure", no_argument, 0, 34},
         {"debug", no_argument, 0, 35},
         {"include-debugger", no_argument, 0, 'd'},
+        {"no-watchpoints", no_argument, 0, 'w'},
         {0, 0, 0, 0}};
 
     int option_index;
@@ -141,6 +144,9 @@ void CLprocessArgs(int argc, char *argv[]) {
             break;
         case 'd':
             global_command_line.include_debugger = true;
+            break;
+        case 'w':
+            global_command_line.no_watchpoints = true;
             break;
         case 'h':
             Usage(argv[0]);

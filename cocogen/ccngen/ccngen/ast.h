@@ -1,10 +1,12 @@
 #pragma once
 #pragma once
 #define INCLUDE_DEBUGGER
+#define INCLUDE_WATCHPOINTS
 #include "ccn/ccn_types.h"
 #include "ccngen/enum.h"
 #include <stddef.h>
 typedef struct ccn_node node_st;
+void free_bin();
 enum H_DATTYPES {
     HDT_NULL,
     HDT_user,

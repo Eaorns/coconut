@@ -8,6 +8,7 @@
 #include "stdio.h"
 #include "gen_helpers/out_macros.h"
 #include "globals.h"
+#include "commandline.h"
 #include <stdio.h>
 
 node_st *dynamic_start_ast_header(node_st *root)
@@ -20,6 +21,15 @@ node_st *dynamic_start_ast_header(node_st *root)
     OUT("#include \"ccngen/enum.h\"\n");
     OUT("#include <stddef.h>\n");
     OUT("typedef struct ccn_node %s;\n", "node_st");
+
+    if (global_command_line.include_debugger) {
+        OUT("#define INCLUDE_DEBUGGER\n");
+        if (!global_command_line.no_watchpoints) {
+            OUT("#define INCLUDE_WATCHPOINTS\n");
+        }
+    }
+
+    OUT_FIELD("void free_bin()");
 
     return root;
 }

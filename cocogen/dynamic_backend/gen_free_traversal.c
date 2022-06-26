@@ -11,6 +11,7 @@
 
 static node_st *ast;
 static node_st *curr_node;
+bool generating_free_all = false;
 
 node_st *DGFTast(node_st *node)
 {
@@ -22,6 +23,7 @@ node_st *DGFTast(node_st *node)
     OUT("#include \"palm/watchpointalloc.h\"\n");
     OUT("#include \"palm/memory.h\"\n");
     ast = node;
+    OUT("#ifdef INCLUDE_DEBUGGER\n");
     OUT_STRUCT("item_free_queue");
     {
         OUT_FIELD("struct ccn_node *node");
@@ -30,7 +32,7 @@ node_st *DGFTast(node_st *node)
     }
     OUT_STRUCT_END();
     OUT_FIELD("struct item_free_queue *trash_can");
-    OUT_START_FUNC("void throw_in_the_trash(struct ccn_node *node)");
+    OUT_START_FUNC("void mark_trashed(struct ccn_node *node)");
     OUT_FIELD("struct item_free_queue *q = MEMmalloc(sizeof(struct item_free_queue))");
     OUT_FIELD("q->node = node");
     OUT_BEGIN_IF("trash_can");
@@ -41,7 +43,31 @@ node_st *DGFTast(node_st *node)
     OUT_FIELD("trash_can = q");
     OUT_FIELD("node->trashed = true");
     OUT_END_FUNC();
+    OUT("#endif\n");
+
     TRAVopt(AST_INODES(node));
+
+    OUT("#ifdef INCLUDE_DEBUGGER\n");
+    OUT_START_FUNC("void free_bin()");
+    OUT_FIELD("struct item_free_queue *next");
+    OUT_BEGIN_WHILE("trash_can != NULL");
+    OUT_BEGIN_SWITCH("NODE_TYPE(trash_can->node)");
+
+    generating_free_all = true;
+    TRAVopt(AST_INODES(node));
+    generating_free_all = false;
+
+    OUT_BEGIN_DEFAULT_CASE();
+    OUT_END_CASE();
+
+    OUT_END_SWITCH();
+    OUT_FIELD("next = trash_can->next");
+    OUT_FIELD("free(trash_can)");
+    OUT_FIELD("trash_can = next");
+    OUT_END_WHILE();
+    OUT_END_FUNC();
+    OUT("#endif\n");
+
     return node;
 }
 
@@ -74,22 +100,39 @@ node_st *DGFTipass(node_st *node)
 node_st *DGFTinode(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
-    curr_node = node;
-    OUT_START_FUNC("struct ccn_node *DEL%s(struct ccn_node *arg_node)", ID_LWR(INODE_NAME(node)));
-    OUT_FIELD("TRAVchildren(arg_node)");
-    OUT_FIELD("throw_in_the_trash(arg_node)");
-    OUT_FIELD("return NULL");
-    OUT_END_FUNC();
-    OUT_START_FUNC("struct ccn_node *DEL%s_real(struct ccn_node *arg_node)", ID_LWR(INODE_NAME(node)));
-    if (INODE_ICHILDREN(node)) {
-        OUT_FIELD("TRAVchildren(arg_node)");
+
+    if (generating_free_all) {
+        OUT_BEGIN_CASE("NT_%s", ID_UPR(INODE_NAME(node)));
+        OUT_FIELD("DEL%s_real(trash_can->node)", ID_LWR(INODE_NAME(node)));
+        OUT_END_CASE();
+    } else {
+        curr_node = node;
+        OUT_START_FUNC("struct ccn_node *DEL%s(struct ccn_node *arg_node)", ID_LWR(INODE_NAME(node)));
+        if (INODE_ICHILDREN(node)) {
+            OUT_FIELD("TRAVchildren(arg_node)");
+        }
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT_FIELD("mark_trashed(arg_node)");
+        OUT("#else\n");
+        TRAVopt(INODE_IATTRIBUTES(node));
+        OUT_FIELD("MEMfree(NODE_FILENAME(arg_node))");
+        OUT_FIELD("MEMfree(arg_node->data.N_%s)", ID_LWR(INODE_NAME(node)));
+        OUT_FIELD("MEMfree(arg_node)");
+        OUT("#endif\n");
+        OUT_FIELD("return NULL");
+        OUT_END_FUNC();
+
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT_START_FUNC("struct ccn_node *DEL%s_real(struct ccn_node *arg_node)", ID_LWR(INODE_NAME(node)));
+        TRAVopt(INODE_IATTRIBUTES(node));
+        OUT_FIELD("MEMfree(NODE_FILENAME(arg_node))");
+        OUT_FIELD("wpfree(arg_node->data.N_%s)", ID_LWR(INODE_NAME(node)));
+        OUT_FIELD("MEMfree(arg_node)");
+        OUT_FIELD("return NULL");
+        OUT_END_FUNC();
+        OUT("#endif\n");
     }
-    TRAVopt(INODE_IATTRIBUTES(node));
-    OUT_FIELD("MEMfree(NODE_FILENAME(arg_node))");
-    OUT_FIELD("wpfree(arg_node->data.N_%s)", ID_LWR(INODE_NAME(node)));
-    OUT_FIELD("MEMfree(arg_node)");
-    OUT_FIELD("return NULL");
-    OUT_END_FUNC();
+
     TRAVopt(INODE_NEXT(node));
     return node;
 }

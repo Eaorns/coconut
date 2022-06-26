@@ -24,6 +24,8 @@
 #define OUT_BEGIN_ELSEIF(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "} else if ("fmt ") {\n", ## __VA_ARGS__)
 #define OUT_BEGIN_ELSE() GNprint(ctx, GN_INCREASE_WS_AFTER, "} else {\n")
 #define OUT_END_IF() GNprint(ctx, GN_DECREASE_WS_BEFORE, "}\n\n")
+#define OUT_BEGIN_WHILE(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "while ("fmt ") {\n", ## __VA_ARGS__)
+#define OUT_END_WHILE() GNprint(ctx, GN_DECREASE_WS_BEFORE, "}\n\n")
 #define OUT_ENUM_FIELD(fmt, ...)  GNprint(ctx, GN_DEFAULT, fmt ",\n", ## __VA_ARGS__)
 #define OUT_BEGIN_SWITCH(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "switch (" fmt ") {\n", ## __VA_ARGS__)
 #define OUT_BEGIN_CASE(fmt, ...) GNprint(ctx, GN_INCREASE_WS_AFTER, "case " fmt ":\n", ## __VA_ARGS__)
