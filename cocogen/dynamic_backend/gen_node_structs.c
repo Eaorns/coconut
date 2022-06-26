@@ -5,6 +5,7 @@
 #include "frontend/symboltable.h"
 #include "gen_helpers/out_macros.h"
 #include "globals.h"
+#include "commandline.h"
 #include "palm/ctinfo.h"
 #include "generator/generator.h"
 
@@ -17,23 +18,28 @@ bool gen_hist_struct = false;
 node_st *DGNSast(node_st *node)
 {
     ste = AST_STABLE(node);
-    GeneratorContext *ctx = globals.gen_ctx;
-    OUT_ENUM("H_DATTYPES");
-    {
-        for (int i = 0; i <= AT_uint64; i++) {
-            OUT_ENUM_FIELD("HDT_%s", FMTattributeTypeName(i));
-        }
-    }
-    OUT_ENUM_END();
 
-    OUT_TYPEDEF_STRUCT("hist_item");
-    {
-        OUT_FIELD("void *val");
-        OUT_FIELD("void *rip");
-        OUT_FIELD("size_t action");
-        OUT_FIELD("struct hist_item *next");
+    if (global_command_line.include_debugger) {
+        GeneratorContext *ctx = globals.gen_ctx;
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT_ENUM("H_DATTYPES");
+        {
+            for (int i = 0; i <= AT_uint64; i++) {
+                OUT_ENUM_FIELD("HDT_%s", FMTattributeTypeName(i));
+            }
+        }
+        OUT_ENUM_END();
+
+        OUT_TYPEDEF_STRUCT("hist_item");
+        {
+            OUT_FIELD("void *val");
+            OUT_FIELD("void *rip");
+            OUT_FIELD("size_t action");
+            OUT_FIELD("struct hist_item *next");
+        }
+        OUT_TYPEDEF_STRUCT_END("hist_item");
+        OUT("#endif\n");
     }
-    OUT_TYPEDEF_STRUCT_END("hist_item");
 
     TRAVchildren(node);
     return node;
@@ -61,21 +67,24 @@ node_st *DGNSinode(node_st *node)
     }
     OUT_STRUCT_END();
 
-    // TODO move to separate traversal?
-    gen_hist_struct = true;
-    OUT_STRUCT("NODE_HIST_%s", name_upr);
-    {
-        OUT_UNION("HIST_%s", name_upr);
-        OUT_STRUCT("HIST_ITEMS_%s", name_upr);
-        val_num = 0;
-        TRAVopt(INODE_ICHILDREN(node));
-        TRAVopt(INODE_IATTRIBUTES(node));
-        OUT_TYPEDEF_STRUCT_END("hist_items");
-        OUT_FIELD("void *hist_list[%i]", val_num);
-        OUT_TYPEDEF_STRUCT_END("hist");
+    if (global_command_line.include_debugger) {
+        gen_hist_struct = true;
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT_STRUCT("NODE_HIST_%s", name_upr);
+        {
+            OUT_UNION("HIST_%s", name_upr);
+            OUT_STRUCT("HIST_ITEMS_%s", name_upr);
+            val_num = 0;
+            TRAVopt(INODE_ICHILDREN(node));
+            TRAVopt(INODE_IATTRIBUTES(node));
+            OUT_TYPEDEF_STRUCT_END("hist_items");
+            OUT_FIELD("void *hist_list[%i]", val_num);
+            OUT_TYPEDEF_STRUCT_END("hist");
+        }
+        OUT_STRUCT_END();
+        OUT("#endif\n");
+        gen_hist_struct = false;
     }
-    OUT_STRUCT_END();
-    gen_hist_struct = false;
 
     TRAVopt(INODE_NEXT(node));
     return node;

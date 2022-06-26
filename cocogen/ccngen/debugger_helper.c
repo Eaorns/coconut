@@ -1,4 +1,6 @@
+#include "ccngen/ast.h"
 #include "ccngen/debugger_helper.h"
+#ifdef INCLUDE_DEBUGGER
 #include <stddef.h>
 #include "palm/str.h"
 int DBGHelper_ntoi(enum ccn_nodetype type, char *name) {
@@ -1331,3 +1333,4 @@ int DBGHelper_node_numvals(enum ccn_nodetype type) {
 
 }
 
+#endif

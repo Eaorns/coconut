@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "assert.h"
 
+#include "commandline.h"
 #include "ccngen/ast.h"
 #include "globals.h"
 #include "gen_helpers/out_macros.h"
@@ -20,21 +21,23 @@ node_st *DGNCast(node_st *node)
 {
     dgif_print_semicolon = false;
 
-    GeneratorContext *ctx = globals.gen_ctx;
-    OUT("#ifdef INCLUDE_DEBUGGER\n");
-    OUT_START_FUNC("void wphandler(void *addr, void *old_val __attribute__((unused)), void *ucontext, void *userdata)");
-    {
-        OUT_FIELD("ucontext_t *context = (ucontext_t *)ucontext");
-        OUT_FIELD("void *rip = (void *)context->uc_mcontext.gregs[REG_RIP]");
-        OUT_FIELD("struct hist_item *s = (struct hist_item *)malloc(sizeof(struct hist_item))");
-        OUT_FIELD("s->val = (void*)(*(long*)addr)");
-        OUT_FIELD("s->rip = rip");
-        OUT_FIELD("s->action = CCNgetCurrentActionCtr()");
-        OUT_FIELD("s->next = *(void**)userdata");
-        OUT_FIELD("*(void**)userdata = s");
+    if (global_command_line.include_debugger) {
+        GeneratorContext *ctx = globals.gen_ctx;
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT_START_FUNC("void wphandler(void *addr, void *old_val __attribute__((unused)), void *ucontext, void *userdata)");
+        {
+            OUT_FIELD("ucontext_t *context = (ucontext_t *)ucontext");
+            OUT_FIELD("void *rip = (void *)context->uc_mcontext.gregs[REG_RIP]");
+            OUT_FIELD("struct hist_item *s = (struct hist_item *)malloc(sizeof(struct hist_item))");
+            OUT_FIELD("s->val = (void*)(*(long*)addr)");
+            OUT_FIELD("s->rip = rip");
+            OUT_FIELD("s->action = CCNgetCurrentActionCtr()");
+            OUT_FIELD("s->next = *(void**)userdata");
+            OUT_FIELD("*(void**)userdata = s");
+        }
+        OUT_END_FUNC();
+        OUT("#endif\n");
     }
-    OUT_END_FUNC();
-    OUT("#endif\n");
 
     TRAVchildren(node);
 
@@ -54,22 +57,28 @@ node_st *DGNCinode(node_st *node)
     OUT_START_FUNC_FIELD();
     {
         OUT_FIELD("%s *node = NewNode()", basic_node_type);
-        OUT("#ifdef INCLUDE_DEBUGGER\n");
-        OUT_FIELD("node->data.N_%s = wpalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
-        OUT("#else\n");
-        OUT_FIELD("node->data.N_%s = MEMmalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
-        OUT("#endif\n");
-        OUT_FIELD("NODE_TYPE(node) = %s%s", "NT_", ID_UPR(INODE_NAME(node)));
-        OUT("#ifdef INCLUDE_DEBUGGER\n");
-        OUT_FIELD("NODE_HIST(node)->data.NH_%s = MEMcalloc(sizeof(struct NODE_HIST_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
-        OUT("#ifdef INCLUDE_WATCHPOINTS\n");
+        if (global_command_line.include_debugger) {
+            OUT("#ifdef INCLUDE_DEBUGGER\n");
+            OUT_FIELD("node->data.N_%s = wpalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
+            OUT("#else\n");
+            OUT_FIELD("node->data.N_%s = MEMmalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
+            OUT("#endif\n");
+            OUT_FIELD("NODE_TYPE(node) = %s%s", "NT_", ID_UPR(INODE_NAME(node)));
+            OUT("#ifdef INCLUDE_DEBUGGER\n");
+            OUT_FIELD("NODE_HIST(node)->data.NH_%s = MEMcalloc(sizeof(struct NODE_HIST_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
+            OUT("#ifdef INCLUDE_WATCHPOINTS\n");
 
-        generating_watchpoints = true;
-        TRAVopt(INODE_ICHILDREN(node));
-        TRAVopt(INODE_IATTRIBUTES(node));
-        OUT("#endif\n");
-        OUT("#endif\n");
-        generating_watchpoints = false;
+            generating_watchpoints = true;
+            TRAVopt(INODE_ICHILDREN(node));
+            TRAVopt(INODE_IATTRIBUTES(node));
+            OUT("#endif\n");
+            OUT("#endif\n");
+            generating_watchpoints = false;
+        } else {
+            OUT_FIELD("node->data.N_%s = MEMmalloc(sizeof(struct NODE_DATA_%s))", ID_LWR(INODE_NAME(node)), ID_UPR(INODE_NAME(node)));
+            OUT_FIELD("NODE_TYPE(node) = %s%s", "NT_", ID_UPR(INODE_NAME(node)));
+        }
+
         TRAVopt(INODE_ICHILDREN(node));
         TRAVopt(INODE_IATTRIBUTES(node));
 

@@ -1,4 +1,6 @@
 #define _GNU_SOURCE  // Required for REG_RIP
+#include "ccngen/ast.h"
+#ifdef INCLUDE_DEBUGGER
 #include <stdio.h>
 #include <stddef.h>
 #include <signal.h>
@@ -6,18 +8,22 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <ucontext.h>
-#include "ccngen/ast.h"
-#include "palm/memory.h"
 #include "palm/watchpoint.h"
 #include "palm/watchpointalloc.h"
 #include "ccn/phase_driver.h"
+#endif
+#include "palm/memory.h"
+#ifdef INCLUDE_DEBUGGER
 #define NODE_LIST_REALLOC_AMT 256
 size_t node_id_ctr = 0;
 node_st **node_tracker_list;
 size_t node_tracker_list_size = 0;
+#endif
 node_st *NewNode() {
     node_st *node = MEMmalloc(sizeof(node_st));
+    #ifdef INCLUDE_DEBUGGER
     NODE_HIST(node) = MEMmalloc(sizeof(ccn_hist));
+    #endif
     NODE_TYPE(node) = NT_NULL;
     NODE_CHILDREN(node) = NULL;
     NODE_FILENAME(node) = NULL;
@@ -26,6 +32,7 @@ node_st *NewNode() {
     NODE_ELINE(node) = 0;
     NODE_BCOL(node) = 0;
     NODE_ECOL(node) = 0;
+    #ifdef INCLUDE_DEBUGGER
     NODE_ID(node) = node_id_ctr;
     NODE_PARENT(node) = NULL;
     NODE_ALLOCED_IN(node) = CCNgetCurrentActionId();
@@ -35,9 +42,11 @@ node_st *NewNode() {
     }
 
     node_tracker_list[node_id_ctr++] = node;
+    #endif
     return node;
 }
 
+#ifdef INCLUDE_DEBUGGER
 size_t get_node_id_counter() {
     return node_id_ctr;
 }
@@ -46,6 +55,7 @@ node_st **get_node_tracker_list() {
     return node_tracker_list;
 }
 
+#endif
 #ifdef INCLUDE_DEBUGGER
 void wphandler(void *addr, void *old_val __attribute__((unused)), void *ucontext, void *userdata) {
     ucontext_t *context = (ucontext_t *)ucontext;

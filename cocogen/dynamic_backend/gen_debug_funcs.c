@@ -4,6 +4,7 @@
 #include "assert.h"
 
 #include "globals.h"
+#include "commandline.h"
 #include "gen_helpers/out_macros.h"
 #include "palm/ctinfo.h"
 #include "palm/str.h"
@@ -30,8 +31,31 @@ node_st *DGDFast(node_st *node)
 {
     GeneratorContext *ctx = globals.gen_ctx;
 
+    GNopenIncludeFile(ctx, "debugger_helper.h");
+    OUT("#include \"ccngen/ast.h\"\n");
+    if (global_command_line.include_debugger) {
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT_FIELD("int DBGHelper_ntoi(enum ccn_nodetype type, char *name)");
+        OUT_FIELD("char *DBGHelper_iton(enum ccn_nodetype type, int idx)");
+        OUT_FIELD("enum H_DATTYPES DBGHelper_gettype(enum ccn_nodetype type, int idx)");
+        OUT_FIELD("void *DBGHelper_getptr(node_st *node, int idx)");
+        OUT_FIELD("void DBGHelper_setval(node_st *node, int idx, void *val)");
+        OUT_FIELD("int DBGHelper_ischild(enum ccn_nodetype type, int idx)");
+        OUT_FIELD("char *DBGHelper_nodename(enum ccn_nodetype type)");
+        OUT_FIELD("hist_item **DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx)");
+        OUT_FIELD("int DBGHelper_node_numvals(enum ccn_nodetype type)");
+        OUT("#endif\n");
+    }
+
     GNopenSourceFile(ctx, "debugger_helper.c");
+    OUT("#include \"ccngen/ast.h\"\n");
     OUT("#include \"ccngen/debugger_helper.h\"\n");
+
+    if (!global_command_line.include_debugger) {
+        return node;
+    }
+
+    OUT("#ifdef INCLUDE_DEBUGGER\n");
     OUT("#include <stddef.h>\n");
     OUT("#include \"palm/str.h\"\n");
 
@@ -125,17 +149,8 @@ node_st *DGDFast(node_st *node)
     OUT_END_SWITCH();
     OUT_END_FUNC();
 
-    GNopenIncludeFile(ctx, "debugger_helper.h");
-    OUT("#include \"ccngen/ast.h\"\n");
-    OUT_FIELD("int DBGHelper_ntoi(enum ccn_nodetype type, char *name)");
-    OUT_FIELD("char *DBGHelper_iton(enum ccn_nodetype type, int idx)");
-    OUT_FIELD("enum H_DATTYPES DBGHelper_gettype(enum ccn_nodetype type, int idx)");
-    OUT_FIELD("void *DBGHelper_getptr(node_st *node, int idx)");
-    OUT_FIELD("void DBGHelper_setval(node_st *node, int idx, void *val)");
-    OUT_FIELD("int DBGHelper_ischild(enum ccn_nodetype type, int idx)");
-    OUT_FIELD("char *DBGHelper_nodename(enum ccn_nodetype type)");
-    OUT_FIELD("hist_item **DBGHelper_nodehist(enum ccn_nodetype type, ccn_hist *hist, int idx)");
-    OUT_FIELD("int DBGHelper_node_numvals(enum ccn_nodetype type)");
+    OUT("#endif\n");
+
     return node;
 }
 

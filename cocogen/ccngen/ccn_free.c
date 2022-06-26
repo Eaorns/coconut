@@ -1,8 +1,10 @@
 #include "ccngen/ast.h"
 #include "ccn/dynamic_core.h"
+#include "palm/memory.h"
+#ifdef INCLUDE_DEBUGGER
 #include "palm/watchpoint.h"
 #include "palm/watchpointalloc.h"
-#include "palm/memory.h"
+#endif
 #ifdef INCLUDE_DEBUGGER
 struct item_free_queue {
     struct ccn_node *node;

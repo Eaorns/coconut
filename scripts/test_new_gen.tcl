@@ -36,7 +36,7 @@ proc setup {coconut target} {
 
 proc gen_and_replace {tmp} {
 	cd $tmp/coconut/build
-	exec ./cocogen/cocogen $tmp/coconut/cocogen/main.ccn
+	exec ./cocogen/cocogen --include-debugger $tmp/coconut/cocogen/main.ccn
 	file delete -force $tmp/coconut/cocogen/ccngen
 	file copy $tmp/coconut/build/ccngen $tmp/coconut/cocogen
 }

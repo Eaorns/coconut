@@ -3,6 +3,7 @@
 #include "assert.h"
 
 #include "globals.h"
+#include "commandline.h"
 #include "gen_helpers/out_macros.h"
 #include "palm/ctinfo.h"
 #include "palm/str.h"
@@ -20,13 +21,17 @@ node_st *DGNMast(node_st *node)
 
 node_st *DGNMinode(node_st *node)
 {
-    GeneratorContext *ctx = globals.gen_ctx;
     curr_node_name = ID_LWR(INODE_NAME(node));
     curr_node_name_upr = ID_UPR(INODE_NAME(node));
     TRAVopt(INODE_ICHILDREN(node));
     TRAVopt(INODE_IATTRIBUTES(node));
-    // TODO name collisions?
-    OUT("#define HIST_%s(n) (((ccn_hist*)n)->data.NH_%s)\n", curr_node_name_upr, curr_node_name);
+    if (global_command_line.include_debugger) {
+        // TODO name collisions?
+        GeneratorContext *ctx = globals.gen_ctx;
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT("#define HIST_%s(n) (((ccn_hist*)n)->data.NH_%s)\n", curr_node_name_upr, curr_node_name);
+        OUT("#endif\n");
+    }
     curr_node_name_upr = NULL;
     curr_node_name = NULL;
     TRAVopt(INODE_NEXT(node));

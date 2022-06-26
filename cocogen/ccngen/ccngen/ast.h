@@ -1,12 +1,13 @@
 #pragma once
 #pragma once
-#define INCLUDE_DEBUGGER
-#define INCLUDE_WATCHPOINTS
 #include "ccn/ccn_types.h"
 #include "ccngen/enum.h"
 #include <stddef.h>
 typedef struct ccn_node node_st;
+#define INCLUDE_DEBUGGER
+#define INCLUDE_WATCHPOINTS
 void free_bin();
+#ifdef INCLUDE_DEBUGGER
 enum H_DATTYPES {
     HDT_NULL,
     HDT_user,
@@ -35,6 +36,7 @@ typedef struct hist_item {
     struct hist_item *next;
 } hist_item;
 
+#endif
 struct NODE_DATA_ID {
     union NODE_CHILDREN_ID {
         struct NODE_CHILDREN_ID_STRUCT {
@@ -52,6 +54,7 @@ struct NODE_DATA_ID {
     int col_end;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_ID {
     union HIST_ID {
         struct HIST_ITEMS_ID {
@@ -69,6 +72,7 @@ struct NODE_HIST_ID {
 
 };
 
+#endif
 struct NODE_DATA_IENUM {
     union NODE_CHILDREN_IENUM {
         struct NODE_CHILDREN_IENUM_STRUCT {
@@ -84,6 +88,7 @@ struct NODE_DATA_IENUM {
     char * iinfo;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_IENUM {
     union HIST_IENUM {
         struct HIST_ITEMS_IENUM {
@@ -99,6 +104,7 @@ struct NODE_HIST_IENUM {
 
 };
 
+#endif
 struct NODE_DATA_ATTRIBUTE {
     union NODE_CHILDREN_ATTRIBUTE {
         struct NODE_CHILDREN_ATTRIBUTE_STRUCT {
@@ -115,6 +121,7 @@ struct NODE_DATA_ATTRIBUTE {
     int in_constructor;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_ATTRIBUTE {
     union HIST_ATTRIBUTE {
         struct HIST_ITEMS_ATTRIBUTE {
@@ -131,6 +138,7 @@ struct NODE_HIST_ATTRIBUTE {
 
 };
 
+#endif
 struct NODE_DATA_ITRAVDATA {
     union NODE_CHILDREN_ITRAVDATA {
         struct NODE_CHILDREN_ITRAVDATA_STRUCT {
@@ -146,6 +154,7 @@ struct NODE_DATA_ITRAVDATA {
     char * include_file;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_ITRAVDATA {
     union HIST_ITRAVDATA {
         struct HIST_ITEMS_ITRAVDATA {
@@ -161,6 +170,7 @@ struct NODE_HIST_ITRAVDATA {
 
 };
 
+#endif
 struct NODE_DATA_SETOPERATION {
     union NODE_CHILDREN_SETOPERATION {
         struct NODE_CHILDREN_SETOPERATION_STRUCT {
@@ -174,6 +184,7 @@ struct NODE_DATA_SETOPERATION {
     enum setoperation_type type;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_SETOPERATION {
     union HIST_SETOPERATION {
         struct HIST_ITEMS_SETOPERATION {
@@ -187,6 +198,7 @@ struct NODE_HIST_SETOPERATION {
 
 };
 
+#endif
 struct NODE_DATA_SETLITERAL {
     union NODE_CHILDREN_SETLITERAL {
         struct NODE_CHILDREN_SETLITERAL_STRUCT {
@@ -200,6 +212,7 @@ struct NODE_DATA_SETLITERAL {
 
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_SETLITERAL {
     union HIST_SETLITERAL {
         struct HIST_ITEMS_SETLITERAL {
@@ -213,6 +226,7 @@ struct NODE_HIST_SETLITERAL {
 
 };
 
+#endif
 struct NODE_DATA_SETREFERENCE {
     union NODE_CHILDREN_SETREFERENCE {
         struct NODE_CHILDREN_SETREFERENCE_STRUCT {
@@ -224,6 +238,7 @@ struct NODE_DATA_SETREFERENCE {
 
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_SETREFERENCE {
     union HIST_SETREFERENCE {
         struct HIST_ITEMS_SETREFERENCE {
@@ -235,6 +250,7 @@ struct NODE_HIST_SETREFERENCE {
 
 };
 
+#endif
 struct NODE_DATA_STE {
     union NODE_CHILDREN_STE {
         struct NODE_CHILDREN_STE_STRUCT {
@@ -248,6 +264,7 @@ struct NODE_DATA_STE {
     node_st *value;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_STE {
     union HIST_STE {
         struct HIST_ITEMS_STE {
@@ -261,6 +278,7 @@ struct NODE_HIST_STE {
 
 };
 
+#endif
 struct NODE_DATA_CHILD {
     union NODE_CHILDREN_CHILD {
         struct NODE_CHILDREN_CHILD_STRUCT {
@@ -278,6 +296,7 @@ struct NODE_DATA_CHILD {
     int is_mandatory;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_CHILD {
     union HIST_CHILD {
         struct HIST_ITEMS_CHILD {
@@ -295,6 +314,7 @@ struct NODE_HIST_CHILD {
 
 };
 
+#endif
 struct NODE_DATA_LIFETIME_RANGE {
     union NODE_CHILDREN_LIFETIME_RANGE {
         struct NODE_CHILDREN_LIFETIME_RANGE_STRUCT {
@@ -309,6 +329,7 @@ struct NODE_DATA_LIFETIME_RANGE {
     int next_action_id;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_LIFETIME_RANGE {
     union HIST_LIFETIME_RANGE {
         struct HIST_ITEMS_LIFETIME_RANGE {
@@ -323,6 +344,7 @@ struct NODE_HIST_LIFETIME_RANGE {
 
 };
 
+#endif
 struct NODE_DATA_ILIFETIME {
     union NODE_CHILDREN_ILIFETIME {
         struct NODE_CHILDREN_ILIFETIME_STRUCT {
@@ -337,6 +359,7 @@ struct NODE_DATA_ILIFETIME {
     enum lifetime_type type;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_ILIFETIME {
     union HIST_ILIFETIME {
         struct HIST_ITEMS_ILIFETIME {
@@ -351,6 +374,7 @@ struct NODE_HIST_ILIFETIME {
 
 };
 
+#endif
 struct NODE_DATA_INODESET {
     union NODE_CHILDREN_INODESET {
         struct NODE_CHILDREN_INODESET_STRUCT {
@@ -366,6 +390,7 @@ struct NODE_DATA_INODESET {
     char * iinfo;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_INODESET {
     union HIST_INODESET {
         struct HIST_ITEMS_INODESET {
@@ -381,6 +406,7 @@ struct NODE_HIST_INODESET {
 
 };
 
+#endif
 struct NODE_DATA_INODE {
     union NODE_CHILDREN_INODE {
         struct NODE_CHILDREN_INODE_STRUCT {
@@ -399,6 +425,7 @@ struct NODE_DATA_INODE {
     int index;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_INODE {
     union HIST_INODE {
         struct HIST_ITEMS_INODE {
@@ -417,6 +444,7 @@ struct NODE_HIST_INODE {
 
 };
 
+#endif
 struct NODE_DATA_IPASS {
     union NODE_CHILDREN_IPASS {
         struct NODE_CHILDREN_IPASS_STRUCT {
@@ -432,6 +460,7 @@ struct NODE_DATA_IPASS {
     char * iifno;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_IPASS {
     union HIST_IPASS {
         struct HIST_ITEMS_IPASS {
@@ -447,6 +476,7 @@ struct NODE_HIST_IPASS {
 
 };
 
+#endif
 struct NODE_DATA_ITRAVERSAL {
     union NODE_CHILDREN_ITRAVERSAL {
         struct NODE_CHILDREN_ITRAVERSAL_STRUCT {
@@ -464,6 +494,7 @@ struct NODE_DATA_ITRAVERSAL {
     char * iinfo;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_ITRAVERSAL {
     union HIST_ITRAVERSAL {
         struct HIST_ITEMS_ITRAVERSAL {
@@ -481,6 +512,7 @@ struct NODE_HIST_ITRAVERSAL {
 
 };
 
+#endif
 struct NODE_DATA_IPHASE {
     union NODE_CHILDREN_IPHASE {
         struct NODE_CHILDREN_IPHASE_STRUCT {
@@ -499,6 +531,7 @@ struct NODE_DATA_IPHASE {
     char * iinfo;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_IPHASE {
     union HIST_IPHASE {
         struct HIST_ITEMS_IPHASE {
@@ -517,6 +550,7 @@ struct NODE_HIST_IPHASE {
 
 };
 
+#endif
 struct NODE_DATA_IACTIONS {
     union NODE_CHILDREN_IACTIONS {
         struct NODE_CHILDREN_IACTIONS_STRUCT {
@@ -530,6 +564,7 @@ struct NODE_DATA_IACTIONS {
     int action_id;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_IACTIONS {
     union HIST_IACTIONS {
         struct HIST_ITEMS_IACTIONS {
@@ -543,6 +578,7 @@ struct NODE_HIST_IACTIONS {
 
 };
 
+#endif
 struct NODE_DATA_AST {
     union NODE_CHILDREN_AST {
         struct NODE_CHILDREN_AST_STRUCT {
@@ -565,6 +601,7 @@ struct NODE_DATA_AST {
     bool uses_unsafe;
 };
 
+#ifdef INCLUDE_DEBUGGER
 struct NODE_HIST_AST {
     union HIST_AST {
         struct HIST_ITEMS_AST {
@@ -587,6 +624,7 @@ struct NODE_HIST_AST {
 
 };
 
+#endif
 #define ID_NEXT(n) ((n)->data.N_id->id_children.id_children_st.next)
 #define ID_ORIG(n) ((n)->data.N_id->orig)
 #define ID_LWR(n) ((n)->data.N_id->lwr)
@@ -594,40 +632,56 @@ struct NODE_HIST_AST {
 #define ID_ROW(n) ((n)->data.N_id->row)
 #define ID_COL_BEGIN(n) ((n)->data.N_id->col_begin)
 #define ID_COL_END(n) ((n)->data.N_id->col_end)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_ID(n) (((ccn_hist*)n)->data.NH_id)
+#endif
 #define IENUM_VALS(n) ((n)->data.N_ienum->ienum_children.ienum_children_st.vals)
 #define IENUM_NAME(n) ((n)->data.N_ienum->ienum_children.ienum_children_st.name)
 #define IENUM_IPREFIX(n) ((n)->data.N_ienum->ienum_children.ienum_children_st.iprefix)
 #define IENUM_NEXT(n) ((n)->data.N_ienum->ienum_children.ienum_children_st.next)
 #define IENUM_IINFO(n) ((n)->data.N_ienum->iinfo)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_IENUM(n) (((ccn_hist*)n)->data.NH_ienum)
+#endif
 #define ATTRIBUTE_NAME(n) ((n)->data.N_attribute->attribute_children.attribute_children_st.name)
 #define ATTRIBUTE_TYPE_REFERENCE(n) ((n)->data.N_attribute->attribute_children.attribute_children_st.type_reference)
 #define ATTRIBUTE_LIFETIMES(n) ((n)->data.N_attribute->attribute_children.attribute_children_st.lifetimes)
 #define ATTRIBUTE_NEXT(n) ((n)->data.N_attribute->attribute_children.attribute_children_st.next)
 #define ATTRIBUTE_TYPE(n) ((n)->data.N_attribute->type)
 #define ATTRIBUTE_IN_CONSTRUCTOR(n) ((n)->data.N_attribute->in_constructor)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_ATTRIBUTE(n) (((ccn_hist*)n)->data.NH_attribute)
+#endif
 #define ITRAVDATA_NAME(n) ((n)->data.N_itravdata->itravdata_children.itravdata_children_st.name)
 #define ITRAVDATA_TYPE_REFERENCE(n) ((n)->data.N_itravdata->itravdata_children.itravdata_children_st.type_reference)
 #define ITRAVDATA_NEXT(n) ((n)->data.N_itravdata->itravdata_children.itravdata_children_st.next)
 #define ITRAVDATA_TYPE(n) ((n)->data.N_itravdata->type)
 #define ITRAVDATA_INCLUDE_FILE(n) ((n)->data.N_itravdata->include_file)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_ITRAVDATA(n) (((ccn_hist*)n)->data.NH_itravdata)
+#endif
 #define SETOPERATION_LEFT(n) ((n)->data.N_setoperation->setoperation_children.setoperation_children_st.left)
 #define SETOPERATION_RIGHT(n) ((n)->data.N_setoperation->setoperation_children.setoperation_children_st.right)
 #define SETOPERATION_TYPE(n) ((n)->data.N_setoperation->type)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_SETOPERATION(n) (((ccn_hist*)n)->data.NH_setoperation)
+#endif
 #define SETLITERAL_REFERENCE(n) ((n)->data.N_setliteral->setliteral_children.setliteral_children_st.reference)
 #define SETLITERAL_LEFT(n) ((n)->data.N_setliteral->setliteral_children.setliteral_children_st.left)
 #define SETLITERAL_RIGHT(n) ((n)->data.N_setliteral->setliteral_children.setliteral_children_st.right)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_SETLITERAL(n) (((ccn_hist*)n)->data.NH_setliteral)
+#endif
 #define SETREFERENCE_REFERENCE(n) ((n)->data.N_setreference->setreference_children.setreference_children_st.reference)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_SETREFERENCE(n) (((ccn_hist*)n)->data.NH_setreference)
+#endif
 #define STE_NEXT(n) ((n)->data.N_ste->ste_children.ste_children_st.next)
 #define STE_KEY(n) ((n)->data.N_ste->key)
 #define STE_VALUE(n) ((n)->data.N_ste->value)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_STE(n) (((ccn_hist*)n)->data.NH_ste)
+#endif
 #define CHILD_NAME(n) ((n)->data.N_child->child_children.child_children_st.name)
 #define CHILD_LIFETIMES(n) ((n)->data.N_child->child_children.child_children_st.lifetimes)
 #define CHILD_NEXT(n) ((n)->data.N_child->child_children.child_children_st.next)
@@ -635,23 +689,31 @@ struct NODE_HIST_AST {
 #define CHILD_TYPE(n) ((n)->data.N_child->type)
 #define CHILD_IN_CONSTRUCTOR(n) ((n)->data.N_child->in_constructor)
 #define CHILD_IS_MANDATORY(n) ((n)->data.N_child->is_mandatory)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_CHILD(n) (((ccn_hist*)n)->data.NH_child)
+#endif
 #define LIFETIME_RANGE_TARGET(n) ((n)->data.N_lifetime_range->lifetime_range_children.lifetime_range_children_st.target)
 #define LIFETIME_RANGE_INCLUSIVE(n) ((n)->data.N_lifetime_range->inclusive)
 #define LIFETIME_RANGE_ACTION_ID(n) ((n)->data.N_lifetime_range->action_id)
 #define LIFETIME_RANGE_NEXT_ACTION_ID(n) ((n)->data.N_lifetime_range->next_action_id)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_LIFETIME_RANGE(n) (((ccn_hist*)n)->data.NH_lifetime_range)
+#endif
 #define ILIFETIME_BEGIN(n) ((n)->data.N_ilifetime->ilifetime_children.ilifetime_children_st.begin)
 #define ILIFETIME_END(n) ((n)->data.N_ilifetime->ilifetime_children.ilifetime_children_st.end)
 #define ILIFETIME_NEXT(n) ((n)->data.N_ilifetime->ilifetime_children.ilifetime_children_st.next)
 #define ILIFETIME_TYPE(n) ((n)->data.N_ilifetime->type)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_ILIFETIME(n) (((ccn_hist*)n)->data.NH_ilifetime)
+#endif
 #define INODESET_NAME(n) ((n)->data.N_inodeset->inodeset_children.inodeset_children_st.name)
 #define INODESET_EXPR(n) ((n)->data.N_inodeset->inodeset_children.inodeset_children_st.expr)
 #define INODESET_UNPACKED(n) ((n)->data.N_inodeset->inodeset_children.inodeset_children_st.unpacked)
 #define INODESET_NEXT(n) ((n)->data.N_inodeset->inodeset_children.inodeset_children_st.next)
 #define INODESET_IINFO(n) ((n)->data.N_inodeset->iinfo)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_INODESET(n) (((ccn_hist*)n)->data.NH_inodeset)
+#endif
 #define INODE_NAME(n) ((n)->data.N_inode->inode_children.inode_children_st.name)
 #define INODE_NEXT(n) ((n)->data.N_inode->inode_children.inode_children_st.next)
 #define INODE_ICHILDREN(n) ((n)->data.N_inode->inode_children.inode_children_st.ichildren)
@@ -660,13 +722,17 @@ struct NODE_HIST_AST {
 #define INODE_IIFNO(n) ((n)->data.N_inode->iifno)
 #define INODE_IS_ROOT(n) ((n)->data.N_inode->is_root)
 #define INODE_INDEX(n) ((n)->data.N_inode->index)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_INODE(n) (((ccn_hist*)n)->data.NH_inode)
+#endif
 #define IPASS_NAME(n) ((n)->data.N_ipass->ipass_children.ipass_children_st.name)
 #define IPASS_IPREFIX(n) ((n)->data.N_ipass->ipass_children.ipass_children_st.iprefix)
 #define IPASS_TARGET_FUNC(n) ((n)->data.N_ipass->ipass_children.ipass_children_st.target_func)
 #define IPASS_NEXT(n) ((n)->data.N_ipass->ipass_children.ipass_children_st.next)
 #define IPASS_IIFNO(n) ((n)->data.N_ipass->iifno)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_IPASS(n) (((ccn_hist*)n)->data.NH_ipass)
+#endif
 #define ITRAVERSAL_NAME(n) ((n)->data.N_itraversal->itraversal_children.itraversal_children_st.name)
 #define ITRAVERSAL_IPREFIX(n) ((n)->data.N_itraversal->itraversal_children.itraversal_children_st.iprefix)
 #define ITRAVERSAL_INODES(n) ((n)->data.N_itraversal->itraversal_children.itraversal_children_st.inodes)
@@ -674,7 +740,9 @@ struct NODE_HIST_AST {
 #define ITRAVERSAL_NEXT(n) ((n)->data.N_itraversal->itraversal_children.itraversal_children_st.next)
 #define ITRAVERSAL_INDEX(n) ((n)->data.N_itraversal->index)
 #define ITRAVERSAL_IINFO(n) ((n)->data.N_itraversal->iinfo)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_ITRAVERSAL(n) (((ccn_hist*)n)->data.NH_itraversal)
+#endif
 #define IPHASE_NAME(n) ((n)->data.N_iphase->iphase_children.iphase_children_st.name)
 #define IPHASE_IPREFIX(n) ((n)->data.N_iphase->iphase_children.iphase_children_st.iprefix)
 #define IPHASE_GATE_FUNC(n) ((n)->data.N_iphase->iphase_children.iphase_children_st.gate_func)
@@ -683,11 +751,15 @@ struct NODE_HIST_AST {
 #define IPHASE_IS_START(n) ((n)->data.N_iphase->is_start)
 #define IPHASE_IS_CYCLE(n) ((n)->data.N_iphase->is_cycle)
 #define IPHASE_IINFO(n) ((n)->data.N_iphase->iinfo)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_IPHASE(n) (((ccn_hist*)n)->data.NH_iphase)
+#endif
 #define IACTIONS_REFERENCE(n) ((n)->data.N_iactions->iactions_children.iactions_children_st.reference)
 #define IACTIONS_NEXT(n) ((n)->data.N_iactions->iactions_children.iactions_children_st.next)
 #define IACTIONS_ACTION_ID(n) ((n)->data.N_iactions->action_id)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_IACTIONS(n) (((ccn_hist*)n)->data.NH_iactions)
+#endif
 #define AST_IPHASES(n) ((n)->data.N_ast->ast_children.ast_children_st.iphases)
 #define AST_ITRAVERSALS(n) ((n)->data.N_ast->ast_children.ast_children_st.itraversals)
 #define AST_IPASSES(n) ((n)->data.N_ast->ast_children.ast_children_st.ipasses)
@@ -700,7 +772,9 @@ struct NODE_HIST_AST {
 #define AST_ROOT_NODE(n) ((n)->data.N_ast->root_node)
 #define AST_START_PHASE(n) ((n)->data.N_ast->start_phase)
 #define AST_USES_UNSAFE(n) ((n)->data.N_ast->uses_unsafe)
+#ifdef INCLUDE_DEBUGGER
 #define HIST_AST(n) (((ccn_hist*)n)->data.NH_ast)
+#endif
 node_st *ASTid(char * orig, char * lwr, char * Upr);
 node_st *ASTienum(node_st *vals, node_st *name, node_st *iprefix, char * iinfo);
 node_st *ASTattribute();
@@ -719,6 +793,7 @@ node_st *ASTitraversal(node_st *name);
 node_st *ASTiphase(node_st *name, int is_start);
 node_st *ASTiactions();
 node_st *ASTast();
+#ifdef INCLUDE_DEBUGGER
 union HIST_DATA {
     struct NODE_HIST_AST *NH_ast;
     struct NODE_HIST_IACTIONS *NH_iactions;
@@ -740,6 +815,7 @@ union HIST_DATA {
     struct NODE_HIST_ID *NH_id;
 };
 
+#endif
 union NODE_DATA {
     struct NODE_DATA_AST *N_ast;
     struct NODE_DATA_IACTIONS *N_iactions;
@@ -761,12 +837,14 @@ union NODE_DATA {
     struct NODE_DATA_ID *N_id;
 };
 
+#ifdef INCLUDE_DEBUGGER
 size_t get_node_id_counter();
 node_st **get_node_tracker_list();
 typedef struct ccn_hist {
     union HIST_DATA data;
 } ccn_hist;
 
+#endif
 #define NODE_TYPE(n) ((n)->nodetype)
 #define NODE_CHILDREN(n) ((n)->children)
 #define NODE_NUMCHILDREN(n) ((n)->num_children)
@@ -775,15 +853,19 @@ typedef struct ccn_hist {
 #define NODE_ELINE(n) ((n)->end_line)
 #define NODE_BCOL(n) ((n)->begin_col)
 #define NODE_ECOL(n) ((n)->end_col)
+#ifdef INCLUDE_DEBUGGER
 #define NODE_ID(n) ((n)->id)
 #define NODE_HIST(n) ((n)->hist)
 #define NODE_PARENT(n) ((n)->parent)
 #define NODE_TRASHED(n) ((n)->trashed)
 #define NODE_ALLOCED_IN(n) ((n)->alloc_action_id)
+#endif
 typedef struct ccn_node {
     enum ccn_nodetype nodetype;
     union NODE_DATA data;
+    #ifdef INCLUDE_DEBUGGER
     ccn_hist *hist;
+    #endif
     struct ccn_node **children;
     char *filename;
     long int num_children;
@@ -791,10 +873,11 @@ typedef struct ccn_node {
     uint32_t end_line;
     uint32_t begin_col;
     uint32_t end_col;
-    // Used by debugger
+    #ifdef INCLUDE_DEBUGGER
     size_t id;
     struct ccn_node *parent;
     bool trashed;
     size_t alloc_action_id;
+    #endif
 } ccn_node;
 

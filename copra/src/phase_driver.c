@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <time.h>
 
 #include "ccn/action_types.h"
 #include "ccn/dynamic_core.h"
@@ -510,9 +509,6 @@ void CCNrun(struct ccn_node *node)
 
     resetPhaseDriver();
 
-    time_t start, end;
-    start = clock();
-
     #ifdef INCLUDE_DEBUGGER
     watchpoint_init();
     wpalloc_init();
@@ -553,10 +549,6 @@ void CCNrun(struct ccn_node *node)
     MEMfree(debugger_data.dispatch_hist);
     MEMqueueCleanup(0, (size_t)-1);
     #endif
-
-    end = clock();
-
-    fprintf(stderr, "  (%lu, %f)\n", end - start, (double)(end - start) / CLOCKS_PER_SEC);
 }
 
 size_t CCNgetCurrentActionId()

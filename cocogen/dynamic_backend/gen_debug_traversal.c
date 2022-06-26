@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "commandline.h"
 #include "gen_helpers/out_macros.h"
 #include "palm/ctinfo.h"
 #include "palm/str.h"
@@ -61,12 +62,16 @@ node_st *DGDTinode(node_st *node)
     curr_node = node;
     OUT_START_FUNC("struct ccn_node *DBG%s(struct ccn_node *arg_node)", ID_LWR(INODE_NAME(node)));
     {
-        OUT_FIELD("arg_node->parent = parent");
-        if (INODE_ICHILDREN(node)) {
-            OUT_FIELD("struct ccn_node *curr_parent = parent");
-            OUT_FIELD("parent = arg_node");
-            OUT_FIELD("TRAVchildren(arg_node)");
-            OUT_FIELD("parent = curr_parent");
+        if (global_command_line.include_debugger) {
+            OUT("#ifdef INCLUDE_DEBUGGER\n");
+            OUT_FIELD("arg_node->parent = parent");
+            if (INODE_ICHILDREN(node)) {
+                OUT_FIELD("struct ccn_node *curr_parent = parent");
+                OUT_FIELD("parent = arg_node");
+                OUT_FIELD("TRAVchildren(arg_node)");
+                OUT_FIELD("parent = curr_parent");
+            }
+            OUT("#endif\n");
         }
         OUT_FIELD("return arg_node");
     }

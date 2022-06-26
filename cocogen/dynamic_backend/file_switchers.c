@@ -27,9 +27,8 @@ node_st *dynamic_start_ast_header(node_st *root)
         if (!global_command_line.no_watchpoints) {
             OUT("#define INCLUDE_WATCHPOINTS\n");
         }
+        OUT_FIELD("void free_bin()");
     }
-
-    OUT_FIELD("void free_bin()");
 
     return root;
 }
@@ -40,18 +39,23 @@ node_st *dynamicSwitchToAstSource(node_st *root)
     GNopenSourceFile(ctx, "ast.c");
 
     OUT("#define _GNU_SOURCE  // Required for REG_RIP\n");
-    OUT("#include <stdio.h>\n");
-    OUT("#include <stddef.h>\n");
-    OUT("#include <signal.h>\n");
-    OUT("#include <stdlib.h>\n");
-    OUT("#include <unistd.h>\n");
-    OUT("#include <sys/mman.h>\n");
-    OUT("#include <ucontext.h>\n");
     OUT("#include \"ccngen/ast.h\"\n");
+    if (global_command_line.include_debugger) {
+        OUT("#ifdef INCLUDE_DEBUGGER\n");
+        OUT("#include <stdio.h>\n");
+        OUT("#include <stddef.h>\n");
+        OUT("#include <signal.h>\n");
+        OUT("#include <stdlib.h>\n");
+        OUT("#include <unistd.h>\n");
+        OUT("#include <sys/mman.h>\n");
+        OUT("#include <ucontext.h>\n");
+
+        OUT("#include \"palm/watchpoint.h\"\n");
+        OUT("#include \"palm/watchpointalloc.h\"\n");
+        OUT("#include \"ccn/phase_driver.h\"\n");
+        OUT("#endif\n");
+    } 
     OUT("#include \"palm/memory.h\"\n");
-    OUT("#include \"palm/watchpoint.h\"\n");
-    OUT("#include \"palm/watchpointalloc.h\"\n");
-    OUT("#include \"ccn/phase_driver.h\"\n");
 
     return root;
 }
